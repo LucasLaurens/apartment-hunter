@@ -275,7 +275,10 @@ src/apartment_hunter/
 │   │   ├── laforet_crawler.py
 │   │   ├── citya_crawler.py
 │   │   ├── squarehabitat_crawler.py
-│   │   └── twoa_immobilier_crawler.py ← règles des sites ignorées seulement (forbids_reproduction)
+│   │   ├── bienici_crawler.py    ← règles des sites ignorées seulement (ADR-0012)
+│   │   ├── locservice_crawler.py ← règles des sites ignorées seulement
+│   │   ├── fnaim_crawler.py      ← règles des sites ignorées seulement
+│   │   └── twoa_immobilier_crawler.py ← règles des sites ignorées seulement
 │   ├── notifications/
 │   │   ├── terminal_notifier.py
 │   │   └── composite_notifier.py

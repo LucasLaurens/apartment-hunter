@@ -348,7 +348,8 @@ Où chaque source publie sa date :
 | **ParuVendu** | date `jj/mm/aaaa` sur la carte (libellée « dernière mise à jour ») | gratuit |
 | **Orpi** | `dateCreation` de la page détail (celui des cartes est tamponné au jour du crawl) | requête déjà faite |
 | **PAP** | `p.item-date` « Publié le 3 août 2026 » sur la page détail, lue par la session de la recherche (un client sans elle reçoit 403) | +1 requête / annonce |
-| **Century21, Laforêt, Citya, 2A Immobilier** | aucune date publiée | — |
+| **Bien'ici** | `publicationDate` de l'API (UTC, ramenée à l'heure locale au stockage) | gratuit |
+| **Century21, Laforêt, Citya, Locservice, FNAIM, 2A Immobilier** | aucune date publiée (Locservice : un badge « Récent » seulement) | — |
 
 Les insertions étant `INSERT OR IGNORE`, `SqliteRepository._backfill_site_dates` met à jour les
 lignes déjà stockées en `first_seen` dès qu'une source commence à publier une date — sans jamais
@@ -423,10 +424,12 @@ CrawlAllSources.execute()
 
 Pour éviter de relancer chaque source commune par commune, le crawl dispatche deux filtres :
 
-- **Sources `covers_radius = True`** (PAP, Century21, Laforêt, Square Habitat, 2A Immobilier) : le
-  site couvre déjà la zone (rayon natif PAP, communes voisines pour Century21 et Laforêt — dont la
-  page ville liste aussi le stock des agences alentour —, département entier pour Square Habitat,
-  stock entier de l'agence pour 2A Immobilier).
+- **Sources `covers_radius = True`** (PAP, Century21, Laforêt, Square Habitat, Bien'ici,
+  Locservice, 2A Immobilier) : le site couvre déjà la zone (rayon natif PAP, communes voisines pour
+  Century21 et Laforêt — dont la page ville liste aussi le stock des agences alentour —,
+  département entier pour Square Habitat, carré autour de la ville pour Bien'ici, voisines jusqu'à
+  ~20 km pour Locservice — un rayon de filtre plus large n'y voit pas au-delà —, stock entier de
+  l'agence pour 2A Immobilier).
   Elles reçoivent le filtre **de base** → **une seule recherche** par ville cible.
 - **Sources par ville exacte** (Orpi, Foncia, ParuVendu, Citya, FNAIM) : reçoivent le filtre **étendu** aux
   communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon).
@@ -526,6 +529,9 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         LaforetCrawler(timeout=timeout),
         CityaCrawler(timeout=timeout),
         SquareHabitatCrawler(timeout=timeout),
+        BienIciCrawler(timeout=timeout),
+        LocserviceCrawler(timeout=timeout),
+        FnaimCrawler(timeout=timeout),
         TwoAImmobilierCrawler(timeout=timeout),
         AvendreCrawler(timeout=timeout),   # ← ajouter ici
     ]

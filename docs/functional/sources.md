@@ -1,7 +1,7 @@
 # Sources de données
 
-9 sites scrapés, dont un seulement quand les règles des sites sont ignorées. Données disponibles
-et limites pour chacun.
+12 sites scrapés, dont quatre (Bien'ici, Locservice, FNAIM, 2A Immobilier) seulement quand les
+règles des sites sont ignorées. Données disponibles et limites pour chacun.
 
 > **Règle du projet :** seules les plateformes exposant **publiquement** toute l'info nécessaire,
 > **sans login ni cookie de session**, et **filtrant par ville**, sont utilisées. Une source
@@ -35,9 +35,12 @@ ne change rien aux protections anti-bot : un site qui bloque un client honnête
 | **Laforêt** | Réseau agences | curl_cffi + SSR HTML | — (image) | ❌ non publiée | 1 requête (agences alentour incluses) |
 | **Citya** | Gestionnaire | curl_cffi + SSR HTML | DPE + GES (détail, SVG) | ❌ non publiée | par commune |
 | **Square Habitat** | Réseau agences | curl_cffi + JSON `ng-state` | DPE + GES (détail) | ✅ liste | 1 requête (par département) |
+| **Bien'ici** — règles des sites ignorées seulement | Portail | curl_cffi + API JSON publique | DPE + GES (liste) | ✅ liste | 1 requête (carré autour de la ville) |
+| **Locservice** (règles des sites ignorées seulement) | Direct proprio | curl_cffi + SSR HTML | DPE + GES (détail) | ❌ non publiée | 1 requête (communes voisines, ~20 km) |
+| **FNAIM** — règles des sites ignorées seulement | Fédération d'agences | curl_cffi + SSR HTML | DPE + GES (détail) | ❌ non publiée | par commune |
 | **2A Immobilier** — règles des sites ignorées seulement | Agence locale | curl_cffi + SSR HTML | DPE (détail), pas de GES | ❌ non publiée | stock entier (8 pages) |
 
-PAP/Century21/Laforêt/Square Habitat/2A Immobilier couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, 2A Immobilier par son stock entier, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya itèrent les communes. Le matcher filtre ensuite au rayon exact.
+PAP/Century21/Laforêt/Square Habitat/Bien'ici/Locservice/2A Immobilier couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, Bien'ici par un carré autour de la ville, Locservice par ses communes voisines (~20 km), 2A Immobilier par son stock entier, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya/FNAIM itèrent les communes. Le matcher filtre ensuite au rayon exact.
 
 ### Date de parution
 
@@ -138,7 +141,6 @@ Exceptions :
 | Site | Raison |
 |------|--------|
 | **Jinka** | Annonces derrière connexion (`/sign/in`), `/api/` interdit par `robots.txt` |
-| **Locservice** | Le plus gros stock nouveau autour d'Annecy (107 appartements sur sa page Annecy), en HTML serveur, pages de liste autorisées par `robots.txt`. Mais ses mentions légales interdisent toute reproduction sans accord écrit (comme les CGU de Bien'ici, collecté seulement règles des sites ignorées), et contacter un propriétaire y est payant (29 €/mois relevés) : rejeté le 2026-10-31 |
 | **Figaro Immo, EntreParticuliers** | Cloudflare répond 403 à un client qui se présente sous son nom ; ils ne passaient qu'en imitant l'empreinte TLS de Chrome, ce que les règles de collecte interdisent. Retirés le 2026-10-31 |
 | **SeLoger** | DataDome + rendu JS : le crawler ne passait qu'en masquant l'automatisation (script « stealth »), ce que les règles de collecte interdisent. Retiré le 2026-10-30 |
 | **LeBonCoin** | Captcha DataDome systématique — non contournable sans solveur captcha / proxies résidentiels |
