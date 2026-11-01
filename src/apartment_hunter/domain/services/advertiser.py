@@ -44,7 +44,10 @@ NETWORK_NAMES: Final[dict[str, str]] = {
 # classified here, so a new source can never default to "unknown" by omission.
 # Locservice carries partner agency ads too; its crawler leaves them out.
 PRIVATE_ONLY_SOURCES: Final[frozenset[str]] = frozenset({"pap", "locservice"})
-AGENCY_ONLY_SOURCES: Final[frozenset[str]] = frozenset(NETWORK_NAMES)
+# Federations of independent agencies: agency-only, but no brand of their own to name —
+# the advertiser is the agency printed on each card.
+FEDERATION_SOURCES: Final[frozenset[str]] = frozenset({"fnaim"})
+AGENCY_ONLY_SOURCES: Final[frozenset[str]] = frozenset(NETWORK_NAMES) | FEDERATION_SOURCES
 MIXED_SOURCES: Final[frozenset[str]] = frozenset({"paruvendu", "bienici"})
 
 

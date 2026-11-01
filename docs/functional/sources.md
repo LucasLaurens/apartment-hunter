@@ -1,6 +1,6 @@
 # Sources de données
 
-9 sites scrapés, dont un (Bien'ici) seulement quand les règles des sites sont ignorées. Données disponibles et limites pour chacun.
+9 sites scrapés, dont un (FNAIM) seulement quand les règles des sites sont ignorées. Données disponibles et limites pour chacun.
 
 > **Règle du projet :** seules les plateformes exposant **publiquement** toute l'info nécessaire,
 > **sans login ni cookie de session**, et **filtrant par ville**, sont utilisées. Une source
@@ -34,9 +34,9 @@ ne change rien aux protections anti-bot : un site qui bloque un client honnête
 | **Laforêt** | Réseau agences | curl_cffi + SSR HTML | — (image) | ❌ non publiée | 1 requête (agences alentour incluses) |
 | **Citya** | Gestionnaire | curl_cffi + SSR HTML | DPE + GES (détail, SVG) | ❌ non publiée | par commune |
 | **Square Habitat** | Réseau agences | curl_cffi + JSON `ng-state` | DPE + GES (détail) | ✅ liste | 1 requête (par département) |
-| **Bien'ici** — règles des sites ignorées seulement | Portail | curl_cffi + API JSON publique | DPE + GES (liste) | ✅ liste | 1 requête (carré autour de la ville) |
+| **FNAIM** — règles des sites ignorées seulement | Fédération d'agences | curl_cffi + SSR HTML | DPE + GES (détail) | ❌ non publiée | par commune |
 
-PAP/Century21/Laforêt/Square Habitat/Bien'ici couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, Bien'ici par un carré autour de la ville, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya itèrent les communes. Le matcher filtre ensuite au rayon exact.
+PAP/Century21/Laforêt/Square Habitat couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya/FNAIM itèrent les communes. Le matcher filtre ensuite au rayon exact.
 
 ### Date de parution
 
@@ -65,7 +65,7 @@ Le DPE (énergie) et le GES (émissions) sont affichés par annonce, sur deux é
 
 - **Foncia** : les deux figures sont sur la carte de résultat (consommation kWh + émissions kgCO₂) → calculées sans requête supplémentaire.
 - **ParuVendu** : lettre DPE sur la carte, GES déduit des kg CO₂ de la carte (la page détail est derrière un captcha depuis le 2026-10-28).
-- **Orpi, Century21, Citya, Locservice** : absentes des cartes → lues sur la **page détail** de chaque annonce (1 requête de plus par annonce, résultat mis en cache 24h, même requête que la date de parution).
+- **Orpi, Century21, Citya, FNAIM** : absentes des cartes → lues sur la **page détail** de chaque annonce (1 requête de plus par annonce, résultat mis en cache 24h, même requête que la date de parution).
 - **PAP** : DPE sur la liste, GES généralement absent.
 - **Laforêt** : rend son DPE en image (`/ajax/properties/{id}/dpe`) → non lu, DPE/GES restent inconnus (le matcher laisse alors passer l'annonce).
 
@@ -84,7 +84,7 @@ Presque aucune source ne met l'étage sur ses cartes de résultat. Il est lu sur
 | **Orpi** | label de la liste de caractéristiques |
 | **ParuVendu** | page détail (label + prose), souvent bloquée par un captcha → étage inconnu |
 | **Laforêt** | page détail, uniquement dans la description |
-| **Locservice** | page détail, dans la description du propriétaire (un tiers des annonces le disent) |
+| **FNAIM** | description (carte tronquée, puis page détail) |
 | **Foncia, Century21, PAP, Citya** | non publié → étage inconnu |
 
 Tant que l'étage reste inconnu, `exclude_ground_floor`, `exclude_first_floor` et `top_floor_only` n'écartent rien sur cette source (règle « données manquantes » ci-dessous) — sauf si le texte dit explicitement « RDC » / « rez-de-chaussée ».
@@ -116,8 +116,8 @@ Pas de page pour toutes les communes (Epagny Metz-Tessy renvoie 404) : celles-l�
 ### Citya
 **citya.com** · curl_cffi + SSR. URL `/annonces/location/appartement/{ville}-{cp}`. Deux pièges : les villes à arrondissements résolvent vers l'un d'eux (Lyon → 69001), inconnu de Citya → repli automatique sur `{dept}000` ; et une ville sans stock est **remplie de carrousels inter-villes** (Lyon, Riom… sur une page Annecy) → écartés par le garde-fou département. Données : prix, surface, pièces, ville, code postal, DPE + GES (détail, nom de fichier des SVG Inkscape).
 
-### Locservice
-**locservice.fr** · curl_cffi + SSR. **Crawlé seulement quand les règles des sites sont ignorées** : ses mentions légales interdisent toute reproduction sans accord écrit ([ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)). URL `/{département}-{code}/location-appartement-{commune}.html` puis `-p2.html`, `-p3.html` (département lu sur geo.api.gouv.fr, « Saint » écrit « st »). La page commune liste aussi les communes voisines jusqu'à ~20 km, Savoie comprise depuis Annecy → `covers_radius`. Annonces de particuliers ; les cartes « Logement partenaire » (annonces d'agence reprises d'ailleurs, « Professionnel » sur la page détail) sont écartées. Données : loyer **charges comprises** (dit par la page détail seulement), surface, pièces (T1–T6), commune, code postal, meublé, photo, extrait de description ; DPE + GES et étage sur la page détail. Pas de date. Contacter un propriétaire y est payant ; le crawler ne fait que lire l'annonce et son lien.
+### FNAIM — règles des sites ignorées seulement
+**fnaim.fr** · curl_cffi + SSR. Fédération d'agences indépendantes : elle apporte des agences locales qu'aucune autre source ne publie (2A Immobilier, Agence BFM, Entre 2 Lacs, Like My Home…). Ses mentions légales interdisent l'extraction et la réutilisation de sa base, et son `robots.txt` interdit les pages détail de location : la source ne tourne donc **que si vous avez choisi d'ignorer les règles des sites**. URL `/liste-annonces-immobilieres/18-location-appartement-{ville}-{cp}.htm`, une commune par page (49 annonces pour Annecy le 2026-11-01). Données : loyer mensuel (la carte ne dit ni CC ni HC → « charges ? »), surface, pièces, meublé (puce), ville, code postal, **agence** (annonceur), photos, DPE + GES et étage (détail). Pas de date de parution.
 
 ---
 

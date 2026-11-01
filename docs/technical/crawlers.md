@@ -44,7 +44,7 @@ crawlers tournent en parallèle sans se gêner mutuellement.
 | Laforêt | 2.0s |
 | Citya | 2.0s |
 | Square Habitat | 2.5s |
-| Bien'ici | 3.0s, en série (`CITY_CONCURRENCY = 1`) |
+| FNAIM | 2.0s |
 
 ### Un seul nom, aucun déguisement
 
@@ -235,40 +235,29 @@ connaît pas (`…/auvergne-rhone-alpes/haute-savoie-74`), il est donc lu dans
 `nbEtagesBatiment`) et meublé. `robots.txt` interdit `/resultat-location` et `*/immo/*` ; la
 route `/annonces/location/bien/…` n'en relève pas.
 
-### API JSON publique (Bien'ici) — règles des sites ignorées seulement
+### FNAIM — règles des sites ignorées seulement
 
-Les CGU de Bien'ici interdisent la reproduction de ses annonces : le crawler déclare
-`forbids_reproduction = True` et ne tourne que si le chasseur a choisi d'ignorer les règles des
-sites ([ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)).
-Son `robots.txt` n'interdit ni l'une ni l'autre des deux routes lues.
+`FnaimCrawler` déclare `forbids_reproduction = True` : les mentions légales de fnaim.fr
+interdisent l'extraction et la réutilisation de sa base, et son `robots.txt` interdit les pages
+détail de location (`Disallow: /annonce-immobiliere/*/18-location*`). Il n'entre donc dans le
+crawl que si le chasseur a choisi d'ignorer les règles des sites (ADR-0012) ; le reste ne change
+pas (nom honnête, cadence, refus respecté).
 
-Le front du site lit ses annonces dans une API JSON publique, sans connexion, et le crawler fait
-la même chose, sous `CRAWLER_USER_AGENT` et par `_fetch_html` :
+SSR, cartes `ul.liste li.item` ; la même liste porte des encarts d'articles conseil, reconnus à
+l'absence de lien `/annonce-immobiliere/`. URL `/liste-annonces-immobilieres/18-location-appartement-{ville}-{cp}.htm`
+(code postal via geo.api.gouv.fr), page N `…-{cp}-page-{N}.htm` : les liens du site y ajoutent
+l'état de la recherche en paramètres (`localites=[…]`, tri, `cp=`), le chemin seul sert la même
+page (vérifié le 2026-11-01). 25 cartes par page. La page d'une commune ne liste que cette commune
+(Annecy : 74000 et 74370, 49 annonces), d'où l'itération des communes. Quelques cartes portent
+`haute-savoie-74` dans leur URL mais leur commune (`p.lieu`) reste Annecy ; le garde-fou
+département reste en place pour une commune sans stock.
 
-1. `https://res.bienici.com/suggest.json?q={ville}` — le suggesteur de lieux du site ; l'entrée
-   `type: "city"` du même nom (et portant le code postal de la commune, pour les homonymes)
-   donne sa `boundingBox`, dont le milieu sert de centre. Mis en cache pour la vie du crawler,
-   une réponse seulement.
-2. `https://www.bienici.com/realEstateAds.json?filters={…}` — `filterType: "rent"`,
-   `propertyType: ["flat"]`, `onTheMarket: [true]`, tri par date de parution, `size` 100 et
-   `from` pour la page (`MAX_PAGES` = 4). La zone est le filtre `limit` (avec
-   `mapMode: "enabled"`) : un **polyline encodé** (format Google) du carré circonscrit au rayon
-   (`build_search_square`, `format_polyline`). Une recherche couvre donc tout le rayon
-   (`covers_radius`) et le matcher découpe le cercle.
-
-Champs lus : `price` est le loyer **charges comprises** (sur chaque annonce qui donne les deux,
-il vaut `rentWithoutCharges + charges`) ; avec `charges`, le prix est décomposé loyer + charges,
-sans `charges` il reste un loyer nu marqué « charges non communiquées ». `surfaceArea`,
-`roomsQuantity`, `floor` / `floorQuantity` (dernier étage quand ils sont égaux ; sans `floor`,
-`parse_floor` sur la description), `energyClassification` / `greenhouseGazClassification`,
-`isFurnished`, `city`, `postalCode`, `blurInfo.position` (position floutée à 50 m le plus souvent ;
-écartée quand le flou est la commune entière, `cityOrArrondissement`), `photos[].url`,
-`publicationDate` (date du site), `accountDisplayName` (annonceur, absent sur près d'une annonce
-sur deux). L'URL d'une annonce est `https://www.bienici.com/annonce/{id}`, route que le front
-reconnaît. Une annonce qui ne serait pas une location d'appartement est ignorée.
-
-Une recherche ne porte qu'une ville de base : `CITY_CONCURRENCY = 1` garde 3 s entre deux
-requêtes. Constat du 2026-11-01, Annecy / 20 km : 145 appartements en 2 pages.
+Carte : loyer « 807€ par mois » (ni CC ni HC : `charges_included` reste inconnu, la carte
+affiche « charges ? »), surface et pièces dans le titre, puces (`Meublé`, `Balcon`, `Ascenseur`…
+→ `detect_furnished_chip`), code postal + commune (`p.lieu`), **nom de l'agence** (`.agence .nom`)
+lu comme annonceur, photos. Page détail : DPE et GES (« DPE : D (258 kWh/m² an) »), étage dans la
+description (`parse_floor`). Elle dit aussi « Charges comprises », que `ListingDetails` ne porte
+pas encore. Aucune date de parution, ni carte ni détail.
 
 ### httpx + BeautifulSoup (PAP)
 
@@ -422,7 +411,7 @@ CrawlAllSources.execute()
     ├── CityaCrawler.fetch()      ──→ curl_cffi
     ├── BienIciCrawler.fetch()    ──→ curl_cffi (règles des sites ignorées seulement)
     ├── SquareHabitatCrawler.fetch() ──→ curl_cffi
-    ├── LocserviceCrawler.fetch() ──→ curl_cffi (règles des sites ignorées seulement)
+    ├── FnaimCrawler.fetch()      ──→ curl_cffi (règles des sites ignorées seulement)
     └── await all → save_many()
 ```
 
@@ -437,32 +426,8 @@ Pour éviter de relancer chaque source commune par commune, le crawl dispatche d
   ville liste aussi le stock des agences alentour —, département entier pour Square Habitat,
   carré autour de la ville pour Bien'ici).
   Elles reçoivent le filtre **de base** → **une seule recherche** par ville cible.
-- **Sources par ville exacte** (Orpi, Foncia, ParuVendu, Citya) : reçoivent le filtre **étendu** aux
-  communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon). Ce filtre étendu
-  vient de `SearchFilter.with_crawl_cities` : jusqu'à 30 communes (`_MAX_COMMUNES`), au-delà de
-  `MAX_CITIES` (10), qui ne borne que les villes saisies. `dataclasses.replace` re-validerait et
-  refuserait la liste (tout filtre de plus de 10 communes dans le rayon plantait au crawl).
-
-#### ParuVendu : une commune vide coûte une redirection, pas une page département
-
-ParuVendu reste **par ville exacte**. Mesuré le 2026-11-01 autour d'Annecy (20 km, 30 communes) :
-
-- `/immobilier/recherche/location/appartement/{commune}-{cp}/` répond **200** avec les seules
-  annonces de la commune quand elle en a (10 communes) ; l'ancien chemin
-  `/immobilier/location/appartement/…` ne fait que rediriger (301) vers celui-ci, il est donc
-  demandé directement ;
-- une commune **sans annonce** (20 communes) répond **301 vers la page du département**. Suivre
-  la redirection téléchargeait cette même page (~560 Ko) une fois par commune vide, et envoyait
-  ses cartes hors rayon à l'enrichissement détail. `ParuVenduCrawler.FOLLOW_REDIRECTS = False` :
-  `BaseCrawler._fetch_page` lit alors une redirection comme « pas de page » (journal debug) ;
-- la page département ne remplace pas les communes : elle s'arrête à **5 pages** (`?p=6` → 404),
-  150 annonces sur 206, et en ratait 11 sur les 40 du rayon (les plus anciennes). Pas de rayon
-  natif utilisable : le formulaire poste sur `/immobilier/annoncefo/`, interdit par `robots.txt`.
-
-Avant / après sur ce filtre : ~80 requêtes HTTP (301 compris) et ~14 Mo → 30 requêtes et 2,8 Mo ;
-64 visites détail → 40 ; les 40 annonces du rayon restent. Une page par commune
-(`MAX_PAGES = 1`, 30 cartes ; Annecy en avait 29) : un `?p=2` inexistant répond un 404 de taille
-pleine. Couvert par `tests/infrastructure/test_paruvendu_empty_commune.py`.
+- **Sources par ville exacte** (Orpi, Foncia, ParuVendu, Citya, FNAIM) : reçoivent le filtre **étendu** aux
+  communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon).
 
 Le `ListingMatcher` filtre ensuite tout au rayon exact, donc la couverture reste identique.
 
@@ -559,6 +524,7 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         LaforetCrawler(timeout=timeout),
         CityaCrawler(timeout=timeout),
         SquareHabitatCrawler(timeout=timeout),
+        FnaimCrawler(timeout=timeout),
         AvendreCrawler(timeout=timeout),   # ← ajouter ici
     ]
 ```

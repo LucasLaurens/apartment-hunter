@@ -25,6 +25,7 @@ from .crawlers import (
     BienIciCrawler,
     Century21Crawler,
     CityaCrawler,
+    FnaimCrawler,
     FonciaCrawler,
     LaforetCrawler,
     LocserviceCrawler,
@@ -53,6 +54,7 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         SquareHabitatCrawler(timeout=timeout),
         LocserviceCrawler(timeout=timeout),
         BienIciCrawler(timeout=timeout),
+        FnaimCrawler(timeout=timeout),
     ]
 
 

@@ -108,7 +108,7 @@ défaut, 5 au minimum) et l'alerte (15 min).
 
 ## Sources
 
-9 sites scrapés, tous **publics** (sans login), sous un nom honnête et sans contournement anti-bot ; Bien'ici seulement quand les règles des sites sont ignorées :
+9 sites scrapés (FNAIM seulement quand les règles des sites sont ignorées), tous **publics** (sans login), sous un nom honnête et sans contournement anti-bot :
 
 | Source | Méthode | DPE / GES |
 |--------|---------|-----------|
@@ -120,7 +120,7 @@ défaut, 5 au minimum) et l'alerte (15 min).
 | **Laforêt** | curl_cffi + SSR HTML | — |
 | **Citya** | curl_cffi + SSR HTML | DPE + GES page détail |
 | **Square Habitat** | curl_cffi + JSON `ng-state` | DPE + GES page détail |
-| **Bien'ici** (règles des sites ignorées seulement) | curl_cffi + API JSON publique | DPE + GES liste |
+| **FNAIM** (règles des sites ignorées seulement) | curl_cffi + SSR HTML | DPE + GES page détail |
 
 Sources retirées : **SeLoger** (ne passait DataDome qu'en masquant l'automatisation), **Figaro Immo** et **EntreParticuliers** (Cloudflare refuse un client qui ne se fait pas passer pour Chrome), Jinka (login), Locservice (conditions d'utilisation), **LeBonCoin** (captcha DataDome), **Logic-Immo** (SPA sans accès scraping pur). Détails : [Sources](docs/functional/sources.md).
 
@@ -215,7 +215,7 @@ hunt rules honour                  # Les respecter de nouveau (défaut)
 
 - **Python 3.13** — async/await natif ; le minimum, car `urllib.robotparser` ne lit les jokers `*` et `$` de robots.txt qu'à partir de 3.13
 - **httpx** — HTTP async avec retry
-- **curl_cffi** — client HTTP des crawlers HTML, sans imitation de navigateur (Orpi, Foncia, ParuVendu, Century21, Laforêt, Citya, Square Habitat, Bien'ici)
+- **curl_cffi** — client HTTP des crawlers HTML, sans imitation de navigateur (Orpi, Foncia, ParuVendu, Century21, Laforêt, Citya, Square Habitat, FNAIM)
 - **Playwright** — Chromium headless pour l'audit de l'interface (`make ui-check`)
 - **FastAPI + uvicorn** — interface web locale
 - **BeautifulSoup4 + lxml** — parsing HTML
