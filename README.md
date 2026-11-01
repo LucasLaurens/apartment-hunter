@@ -130,6 +130,33 @@ Le réglage **Règles des sites** (Paramètres, ou `hunt rules ignore`) rouvre �
 
 ---
 
+## Documentation
+
+### Fonctionnelle
+| Document | Description |
+|----------|-------------|
+| [Vue d'ensemble](docs/functional/overview.md) | Comment ça marche de bout en bout |
+| [Glossaire](docs/functional/glossaire.md) | Le vocabulaire du domaine, mot par mot, et les écarts connus |
+| [Filtres](docs/functional/filters.md) | Tous les critères de recherche expliqués |
+| [Notifications](docs/functional/notifications.md) | Terminal + signal in-app |
+| [Sources](docs/functional/sources.md) | Sites scrapés, données disponibles, limites |
+| [Recherche de sources, novembre 2026](docs/research/sources-2026-11.md) | 14 sites examinés au 2026-11-01 ; FNAIM et 2A Immobilier ont depuis rejoint les sources sous l'ADR-0012 |
+
+### Technique
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/technical/architecture.md) | Clean Architecture, couches, règle de dépendance |
+| [Crawlers](docs/technical/crawlers.md) | Fonctionnement interne, anti-bot, ajouter une source |
+| [Modèle de données](docs/technical/data-model.md) | Entités, value objects, schéma SQLite |
+| [Scheduler](docs/technical/scheduler.md) | Mode watch, boucle de polling, concurrence |
+| [Sécurité](docs/technical/security.md) | Credentials, rate limiting, robots.txt |
+| [Conventions de code](docs/technical/conventions.md) | Règles suivies par le code et la doc |
+| [Décisions (ADR)](docs/decisions/README.md) | Les arbitrages métier actés, et ce qu'ils interdisent |
+| [Design de l'interface](DESIGN.md) | Thème Clair / Sombre / Système, tokens OKLCH, composants, accessibilité |
+| [Produit](PRODUCT.md) | Utilisateur, objectif, principes qui justifient le design |
+
+---
+
 ## Commandes CLI
 
 ```
