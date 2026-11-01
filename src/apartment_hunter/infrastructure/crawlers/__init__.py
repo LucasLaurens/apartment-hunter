@@ -11,6 +11,7 @@ from .orpi_crawler import OrpiCrawler
 from .pap_crawler import PapCrawler
 from .paruvendu_crawler import ParuVenduCrawler
 from .squarehabitat_crawler import SquareHabitatCrawler
+from .twoa_immobilier_crawler import TwoAImmobilierCrawler
 
 __all__ = [
     "BaseCrawler",
@@ -28,4 +29,5 @@ __all__ = [
     "OrpiCrawler",
     "PapCrawler",
     "ParuVenduCrawler",
+    "TwoAImmobilierCrawler",
 ]

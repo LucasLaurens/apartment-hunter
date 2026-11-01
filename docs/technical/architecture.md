@@ -80,7 +80,7 @@ Implémente les ports définis dans le domaine :
 
 | Port | Implémentation |
 |------|---------------|
-| `CrawlerPort` | `PapCrawler`, `OrpiCrawler`, `FonciaCrawler`, `ParuVenduCrawler`, `Century21Crawler`, `LaforetCrawler`, `CityaCrawler`, `SquareHabitatCrawler`, `FnaimCrawler` |
+| `CrawlerPort` | `PapCrawler`, `OrpiCrawler`, `FonciaCrawler`, `ParuVenduCrawler`, `Century21Crawler`, `LaforetCrawler`, `CityaCrawler`, `SquareHabitatCrawler`, `TwoAImmobilierCrawler` |
 | `ListingRepositoryPort` | `SqliteRepository` |
 | `NotifierPort` | `TerminalNotifier`, `CompositeNotifier` |
 | `CachePort` | `TtlCache` |
@@ -275,7 +275,7 @@ src/apartment_hunter/
 │   │   ├── laforet_crawler.py
 │   │   ├── citya_crawler.py
 │   │   ├── squarehabitat_crawler.py
-│   │   └── fnaim_crawler.py      ← règles des sites ignorées seulement
+│   │   └── twoa_immobilier_crawler.py ← règles des sites ignorées seulement (forbids_reproduction)
 │   ├── notifications/
 │   │   ├── terminal_notifier.py
 │   │   └── composite_notifier.py

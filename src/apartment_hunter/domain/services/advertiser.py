@@ -42,13 +42,12 @@ NETWORK_NAMES: Final[dict[str, str]] = {
 # Sources whose whole catalogue is one kind. `tests/infrastructure/
 # test_advertiser_source_parity.py` fails when a crawler is added without being
 # classified here, so a new source can never default to "unknown" by omission.
-# Locservice carries partner agency ads too; its crawler leaves them out.
-PRIVATE_ONLY_SOURCES: Final[frozenset[str]] = frozenset({"pap", "locservice"})
-# Federations of independent agencies: agency-only, but no brand of their own to name —
-# the advertiser is the agency printed on each card.
-FEDERATION_SOURCES: Final[frozenset[str]] = frozenset({"fnaim"})
-AGENCY_ONLY_SOURCES: Final[frozenset[str]] = frozenset(NETWORK_NAMES) | FEDERATION_SOURCES
-MIXED_SOURCES: Final[frozenset[str]] = frozenset({"paruvendu", "bienici"})
+PRIVATE_ONLY_SOURCES: Final[frozenset[str]] = frozenset({"pap"})
+# A lone agency's own site: its mandates only, but no network behind it. Kept out of
+# NETWORK_NAMES, which `find_network` reads as brands to spot inside a branch name.
+INDEPENDENT_AGENCY_SOURCES: Final[frozenset[str]] = frozenset({"2a-immobilier"})
+AGENCY_ONLY_SOURCES: Final[frozenset[str]] = frozenset(NETWORK_NAMES) | INDEPENDENT_AGENCY_SOURCES
+MIXED_SOURCES: Final[frozenset[str]] = frozenset({"paruvendu"})
 
 
 def _fold(text: str) -> str:

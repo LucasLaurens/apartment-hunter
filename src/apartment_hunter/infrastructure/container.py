@@ -33,6 +33,7 @@ from .crawlers import (
     PapCrawler,
     ParuVenduCrawler,
     SquareHabitatCrawler,
+    TwoAImmobilierCrawler,
 )
 from .geocoding import NominatimGeocoding
 from .notifications.composite_notifier import CompositeNotifier
@@ -52,9 +53,7 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         LaforetCrawler(timeout=timeout),
         CityaCrawler(timeout=timeout),
         SquareHabitatCrawler(timeout=timeout),
-        LocserviceCrawler(timeout=timeout),
-        BienIciCrawler(timeout=timeout),
-        FnaimCrawler(timeout=timeout),
+        TwoAImmobilierCrawler(timeout=timeout),
     ]
 
 
