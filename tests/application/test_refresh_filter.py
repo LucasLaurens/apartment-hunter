@@ -3,7 +3,7 @@
 from faker import Faker
 
 from apartment_hunter.application.use_cases import CrawlAllSources, RefreshFilter
-from apartment_hunter.domain.entities.search_filter import MAX_CITIES
+from apartment_hunter.domain.entities import MAX_CITIES
 from tests.fakes.builders import build_listing, build_search_filter
 from tests.fakes.in_memory_crawler import InMemoryCrawler
 from tests.fakes.in_memory_geocoding import InMemoryGeocoding
@@ -11,7 +11,7 @@ from tests.fakes.in_memory_listing_repository import InMemoryListingRepository
 
 GEOCODED = {"annecy": (45.8992, 6.1294)}
 
-_fake = Faker("fr_FR")
+fake = Faker("fr_FR")
 
 
 def _build_refresh(
@@ -51,12 +51,12 @@ async def test_an_unsaved_filter_records_nothing() -> None:
     assert await repository.find_source_successes(adhoc.id) == {}
 
 
-async def test_a_radius_wider_than_max_cities_communes_still_crawls_them_all() -> None:
+async def test_crawls_more_communes_than_a_filter_may_name() -> None:
     # Arrange
     repository = InMemoryListingRepository()
-    crawler = InMemoryCrawler("orpi", [])
-    search_filter = build_search_filter(cities=[_fake.unique.city()])
-    communes = [_fake.unique.city() for _ in range(MAX_CITIES + 5)]
+    crawler = InMemoryCrawler("pap", [build_listing(source="pap")])
+    search_filter = build_search_filter(cities=["Annecy"])
+    communes = [fake.unique.city() for _ in range(MAX_CITIES * 3)]
     refresh = RefreshFilter(
         crawl=CrawlAllSources(crawlers=[crawler], repository=repository),
         repository=repository,
@@ -67,4 +67,4 @@ async def test_a_radius_wider_than_max_cities_communes_still_crawls_them_all() -
     await refresh.execute(search_filter, [search_filter])
 
     # Assert
-    assert [f.cities for f in crawler.fetch_calls] == [communes]
+    assert crawler.fetch_calls[0].cities == communes

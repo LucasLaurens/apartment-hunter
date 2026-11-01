@@ -123,17 +123,13 @@ class SearchFilter:
             )
         self._reject_negatives_and_non_numbers()
 
-    def with_crawl_cities(self, crawl_cities: list[str]) -> "SearchFilter":
-        """This filter, searching `crawl_cities` instead of the cities the hunter named.
-
-        `MAX_CITIES` bounds what a person types (one Nominatim call per name); the
-        communes a radius expands to are already geocoded and capped by the geocoder.
-        `dataclasses.replace` would re-run `__post_init__` and refuse them, so the
-        copy is made without it — every other bound was checked when `self` was built.
-        """
-        crawl_filter = copy.copy(self)
-        crawl_filter.cities = list(crawl_cities)
-        return crawl_filter
+    def with_crawl_cities(self, cities: list[str]) -> "SearchFilter":
+        """This filter, crawling `cities`: the communes in radius, which outnumber
+        MAX_CITIES. That bound caps the names the hunter types, each one a Nominatim
+        call; `dataclasses.replace` would re-run it and refuse the crawl list."""
+        expanded = copy.copy(self)
+        expanded.cities = list(cities)
+        return expanded
 
     def _reject_negatives_and_non_numbers(self) -> None:
         negatives = {
