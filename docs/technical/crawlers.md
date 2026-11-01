@@ -44,6 +44,7 @@ crawlers tournent en parallèle sans se gêner mutuellement.
 | Laforêt | 2.0s |
 | Citya | 2.0s |
 | Square Habitat | 2.5s |
+| Locservice | 2.0s |
 
 ### Un seul nom, aucun déguisement
 
@@ -81,7 +82,8 @@ Quand le chasseur choisit d'ignorer les règles des sites (`SiteRules.IGNORED`,
 [ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)),
 `CrawlAllSources` le dit à chaque crawler (`apply_site_rules`) et le garde laisse tout
 passer sans lire `robots.txt`. Une source dont les CGU interdisent l'extraction se
-déclare `forbids_reproduction = True` : elle n'entre dans le crawl que dans ce mode. Le
+déclare `forbids_reproduction = True` : elle n'entre dans le crawl que dans ce mode
+(Locservice, ci-dessous). Le
 reste de la page (nom honnête, pas d'imitation, refus respecté) vaut dans les deux modes.
 
 Constats au premier passage (2026-10-31) : PAP interdit toute URL à paramètres
@@ -233,6 +235,33 @@ connaît pas (`…/auvergne-rhone-alpes/haute-savoie-74`), il est donc lu dans
 `nbEtagesBatiment`) et meublé. `robots.txt` interdit `/resultat-location` et `*/immo/*` ; la
 route `/annonces/location/bien/…` n'en relève pas.
 
+### Locservice — règles des sites ignorées seulement
+
+`locservice_crawler.py`, `forbids_reproduction = True` : ses mentions légales interdisent la
+reproduction sans accord écrit, il ne tourne donc que sous `SiteRules.IGNORED`. Son
+`robots.txt` autorise les pages lues (relevé le 2026-11-01). HTML serveur, `covers_radius` :
+la page commune liste la commune puis ses voisines jusqu'à ~20 km, chacune marquée
+« À 6km de Annecy », Savoie comprise (Arith depuis Annecy) — d'où **pas** de garde-fou
+département, ce n'est pas du remplissage.
+
+- URL `/{département}-{code}/location-appartement-{commune}.html`, pages suivantes
+  `-p2.html`, `-p3.html` (`build_search_url`, `build_page_url`). Le département (code et nom)
+  vient de geo.api.gouv.fr par code postal (`geo_postal.resolve_department`), jamais coupé
+  des deux premiers chiffres (Corse, DOM). Le site écrit « Saint » `st` (`st-jorioz`,
+  `menthon-st-bernard`). Une page au-delà de la dernière redirige vers la dernière :
+  `_paginate` n'y trouve rien de neuf et s'arrête.
+- Cartes `li.accommodation-ad` : titre (« Appartement T2 meublé à louer » → pièces, meublé),
+  commune et code postal (`parse_commune_label`), surface, loyer nu « € / mois », extrait,
+  vignette (la plus large du `srcset`). Les cartes « Logement partenaire » sont des annonces
+  d'agence reprises d'ailleurs (iad…, « Professionnel » sur la page détail) : écartées, la
+  source reste `PRIVATE_ONLY_SOURCES`.
+- Page détail : DPE et GES (`.energy-bar-item--active`, `.pollution-bar-item--active` — la
+  barre entière est dessinée, seul l'élément actif compte ; « NA » = inconnu), étage
+  (`parse_floor` sur la description et les badges seuls, pas sur les avis d'utilisateurs de
+  la page), meublé (`detect_furnished_chip` sur les badges) et **« charges comprises »**,
+  que la carte n'écrit pas : `ListingDetails.charges_included`, replié par `merge_details`.
+  Pas de date de parution, seulement un badge « Récent ».
+
 ### httpx + BeautifulSoup (PAP)
 
 `httpx` async classique, parsing des cartes `.search-list-item-alt`. Résout un geoId via une
@@ -247,7 +276,7 @@ pas cette commune ») : le crawler vit aussi longtemps que `hunt watch`, et un �
 DPE, GES, étage, meublé et date de parution sont rarement sur les cartes de liste.
 `BaseCrawler._enrich_details(apts, fetcher)` visite la page détail de chaque annonce (throttlé) et
 en tire les cinq d'un coup ; chaque crawler fournit son `_fetch_details(url)` qui renvoie un
-`ListingDetails(dpe_rating, ges_rating, published_at, floor, furnished)`. La fusion carte ↔ page
+`ListingDetails(dpe_rating, ges_rating, published_at, floor, furnished, charges_included)`. La fusion carte ↔ page
 détail vit dans `merge_details(listing, details)` — la page détail gagne champ par champ, un champ
 qu'elle ne dit pas garde la valeur de la carte. Résultats **mis en cache 24h** par URL (`DETAIL_CACHE`) pour ne pas re-télécharger à chaque
 crawl.
@@ -384,6 +413,7 @@ CrawlAllSources.execute()
     ├── LaforetCrawler.fetch()    ──→ curl_cffi
     ├── CityaCrawler.fetch()      ──→ curl_cffi
     ├── SquareHabitatCrawler.fetch() ──→ curl_cffi
+    ├── LocserviceCrawler.fetch() ──→ curl_cffi (règles des sites ignorées seulement)
     └── await all → save_many()
 ```
 
@@ -393,9 +423,10 @@ CrawlAllSources.execute()
 
 Pour éviter de relancer chaque source commune par commune, le crawl dispatche deux filtres :
 
-- **Sources `covers_radius = True`** (PAP, Century21, Laforêt, Square Habitat) : le site couvre
-  déjà la zone (rayon natif PAP, communes voisines pour Century21 et Laforêt — dont la page ville
-  liste aussi le stock des agences alentour —, département entier pour Square Habitat).
+- **Sources `covers_radius = True`** (PAP, Century21, Laforêt, Square Habitat, Locservice) : le
+  site couvre déjà la zone (rayon natif PAP, communes voisines pour Century21 et Laforêt — dont la
+  page ville liste aussi le stock des agences alentour —, département entier pour Square Habitat,
+  voisines jusqu'à ~20 km pour Locservice : un rayon de filtre plus large n'y voit pas au-delà).
   Elles reçoivent le filtre **de base** → **une seule recherche** par ville cible.
 - **Sources par ville exacte** (Orpi, Foncia, ParuVendu, Citya) : reçoivent le filtre **étendu** aux
   communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon). Ce filtre étendu

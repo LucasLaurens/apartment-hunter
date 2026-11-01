@@ -42,7 +42,8 @@ NETWORK_NAMES: Final[dict[str, str]] = {
 # Sources whose whole catalogue is one kind. `tests/infrastructure/
 # test_advertiser_source_parity.py` fails when a crawler is added without being
 # classified here, so a new source can never default to "unknown" by omission.
-PRIVATE_ONLY_SOURCES: Final[frozenset[str]] = frozenset({"pap"})
+# Locservice carries partner agency ads too; its crawler leaves them out.
+PRIVATE_ONLY_SOURCES: Final[frozenset[str]] = frozenset({"pap", "locservice"})
 AGENCY_ONLY_SOURCES: Final[frozenset[str]] = frozenset(NETWORK_NAMES)
 MIXED_SOURCES: Final[frozenset[str]] = frozenset({"paruvendu"})
 

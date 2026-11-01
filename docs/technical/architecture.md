@@ -274,7 +274,8 @@ src/apartment_hunter/
 │   │   ├── century21_crawler.py
 │   │   ├── laforet_crawler.py
 │   │   ├── citya_crawler.py
-│   │   └── squarehabitat_crawler.py
+│   │   ├── squarehabitat_crawler.py
+│   │   └── locservice_crawler.py ← règles des sites ignorées seulement
 │   ├── notifications/
 │   │   ├── terminal_notifier.py
 │   │   └── composite_notifier.py

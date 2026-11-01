@@ -74,7 +74,8 @@ ce réglage — voir [ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-r
 ### Source ✅
 **Où l'annonce a été trouvée** — le site scrapé, donc le crawler qui l'a ramenée.
 Valeur technique en minuscules : `pap`, `orpi`, `foncia`, `paruvendu`,
-`century21`, `laforet`, `citya`, `squarehabitat`. Champ `Listing.source`.
+`century21`, `laforet`, `citya`, `squarehabitat`, `locservice` (ce dernier seulement quand
+les règles des sites sont ignorées). Champ `Listing.source`.
 
 Deux familles de sources, à ne pas confondre dans les textes :
 

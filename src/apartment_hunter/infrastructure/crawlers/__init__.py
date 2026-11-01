@@ -4,6 +4,7 @@ from .citya_crawler import CityaCrawler
 from .foncia_crawler import FonciaCrawler
 from .french_dates import parse_french_date
 from .laforet_crawler import LaforetCrawler
+from .locservice_crawler import LocserviceCrawler
 from .orpi_crawler import OrpiCrawler
 from .pap_crawler import PapCrawler
 from .paruvendu_crawler import ParuVenduCrawler
@@ -19,6 +20,7 @@ __all__ = [
     "SquareHabitatCrawler",
     "FonciaCrawler",
     "LaforetCrawler",
+    "LocserviceCrawler",
     "OrpiCrawler",
     "PapCrawler",
     "ParuVenduCrawler",

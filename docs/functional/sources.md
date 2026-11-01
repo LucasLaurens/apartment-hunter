@@ -1,6 +1,6 @@
 # Sources de données
 
-8 sites scrapés. Données disponibles et limites pour chacun.
+9 sites scrapés, dont un (Locservice) seulement quand les règles des sites sont ignorées. Données disponibles et limites pour chacun.
 
 > **Règle du projet :** seules les plateformes exposant **publiquement** toute l'info nécessaire,
 > **sans login ni cookie de session**, et **filtrant par ville**, sont utilisées. Une source
@@ -34,13 +34,14 @@ ne change rien aux protections anti-bot : un site qui bloque un client honnête
 | **Laforêt** | Réseau agences | curl_cffi + SSR HTML | — (image) | ❌ non publiée | 1 requête (agences alentour incluses) |
 | **Citya** | Gestionnaire | curl_cffi + SSR HTML | DPE + GES (détail, SVG) | ❌ non publiée | par commune |
 | **Square Habitat** | Réseau agences | curl_cffi + JSON `ng-state` | DPE + GES (détail) | ✅ liste | 1 requête (par département) |
+| **Locservice** (règles des sites ignorées seulement) | Direct proprio | curl_cffi + SSR HTML | DPE + GES (détail) | ❌ non publiée | 1 requête (communes voisines, ~20 km) |
 
-PAP/Century21/Laforêt/Square Habitat couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya itèrent les communes. Le matcher filtre ensuite au rayon exact.
+PAP/Century21/Laforêt/Square Habitat/Locservice couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya itèrent les communes. Le matcher filtre ensuite au rayon exact.
 
 ### Date de parution
 
 Chaque ligne affiche la date que la source annonce. Quand la source n'en publie aucune (Century21,
-Laforêt, Citya), la date affichée est celle du **premier crawl** où l'annonce est apparue, préfixée
+Laforêt, Citya, Locservice), la date affichée est celle du **premier crawl** où l'annonce est apparue, préfixée
 « vu » (italique atténué en CLI, infobulle explicite sur le web) — c'est une borne haute : l'annonce
 n'est jamais plus récente que ça. Détail technique et provenance par source :
 [Crawlers — date de parution](../technical/crawlers.md#date-de-parution).
@@ -64,7 +65,7 @@ Le DPE (énergie) et le GES (émissions) sont affichés par annonce, sur deux é
 
 - **Foncia** : les deux figures sont sur la carte de résultat (consommation kWh + émissions kgCO₂) → calculées sans requête supplémentaire.
 - **ParuVendu** : lettre DPE sur la carte, GES déduit des kg CO₂ de la carte (la page détail est derrière un captcha depuis le 2026-10-28).
-- **Orpi, Century21, Citya** : absentes des cartes → lues sur la **page détail** de chaque annonce (1 requête de plus par annonce, résultat mis en cache 24h, même requête que la date de parution).
+- **Orpi, Century21, Citya, Locservice** : absentes des cartes → lues sur la **page détail** de chaque annonce (1 requête de plus par annonce, résultat mis en cache 24h, même requête que la date de parution).
 - **PAP** : DPE sur la liste, GES généralement absent.
 - **Laforêt** : rend son DPE en image (`/ajax/properties/{id}/dpe`) → non lu, DPE/GES restent inconnus (le matcher laisse alors passer l'annonce).
 
@@ -83,6 +84,7 @@ Presque aucune source ne met l'étage sur ses cartes de résultat. Il est lu sur
 | **Orpi** | label de la liste de caractéristiques |
 | **ParuVendu** | page détail (label + prose), souvent bloquée par un captcha → étage inconnu |
 | **Laforêt** | page détail, uniquement dans la description |
+| **Locservice** | page détail, dans la description du propriétaire (un tiers des annonces le disent) |
 | **Foncia, Century21, PAP, Citya** | non publié → étage inconnu |
 
 Tant que l'étage reste inconnu, `exclude_ground_floor`, `exclude_first_floor` et `top_floor_only` n'écartent rien sur cette source (règle « données manquantes » ci-dessous) — sauf si le texte dit explicitement « RDC » / « rez-de-chaussée ».
@@ -114,6 +116,9 @@ Pas de page pour toutes les communes (Epagny Metz-Tessy renvoie 404) : celles-l�
 ### Citya
 **citya.com** · curl_cffi + SSR. URL `/annonces/location/appartement/{ville}-{cp}`. Deux pièges : les villes à arrondissements résolvent vers l'un d'eux (Lyon → 69001), inconnu de Citya → repli automatique sur `{dept}000` ; et une ville sans stock est **remplie de carrousels inter-villes** (Lyon, Riom… sur une page Annecy) → écartés par le garde-fou département. Données : prix, surface, pièces, ville, code postal, DPE + GES (détail, nom de fichier des SVG Inkscape).
 
+### Locservice
+**locservice.fr** · curl_cffi + SSR. **Crawlé seulement quand les règles des sites sont ignorées** : ses mentions légales interdisent toute reproduction sans accord écrit ([ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)). URL `/{département}-{code}/location-appartement-{commune}.html` puis `-p2.html`, `-p3.html` (département lu sur geo.api.gouv.fr, « Saint » écrit « st »). La page commune liste aussi les communes voisines jusqu'à ~20 km, Savoie comprise depuis Annecy → `covers_radius`. Annonces de particuliers ; les cartes « Logement partenaire » (annonces d'agence reprises d'ailleurs, « Professionnel » sur la page détail) sont écartées. Données : loyer **charges comprises** (dit par la page détail seulement), surface, pièces (T1–T6), commune, code postal, meublé, photo, extrait de description ; DPE + GES et étage sur la page détail. Pas de date. Contacter un propriétaire y est payant ; le crawler ne fait que lire l'annonce et son lien.
+
 ---
 
 ## Données manquantes : comportement
@@ -131,6 +136,7 @@ Exceptions :
 | Site | Raison |
 |------|--------|
 | **Jinka** | Annonces derrière connexion (`/sign/in`), `/api/` interdit par `robots.txt` |
+| **Bien'ici** | Accessible sans connexion (API JSON publique), mais ses CGU interdisent la reproduction du contenu sans autorisation : dans le doute, pas de collecte (2026-10-30) |
 | **Figaro Immo, EntreParticuliers** | Cloudflare répond 403 à un client qui se présente sous son nom ; ils ne passaient qu'en imitant l'empreinte TLS de Chrome, ce que les règles de collecte interdisent. Retirés le 2026-10-31 |
 | **SeLoger** | DataDome + rendu JS : le crawler ne passait qu'en masquant l'automatisation (script « stealth »), ce que les règles de collecte interdisent. Retiré le 2026-10-30 |
 | **LeBonCoin** | Captcha DataDome systématique — non contournable sans solveur captcha / proxies résidentiels |

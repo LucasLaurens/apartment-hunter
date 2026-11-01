@@ -43,10 +43,11 @@ def build_listing_id(url: str) -> str:
 class ListingDetails:
     """What a listing's detail page adds to what its search-result card already gave.
 
-    All five are optional because sites differ: Orpi's detail page carries the
+    All six are optional because sites differ: Orpi's detail page carries the
     energy scales *and* a creation date, Century 21's only the scales, Laforêt's
     only the storey buried in its description. The furnishing answer lives in a
     criteria table the cards never print, so it is read here for every source.
+    Locservice's card prints a bare rent; only its page says "charges comprises".
     """
 
     dpe_rating: DpeRating | None = None
@@ -54,6 +55,7 @@ class ListingDetails:
     published_at: datetime | None = None
     floor: Floor | None = None
     furnished: bool | None = None
+    charges_included: bool | None = None
 
 
 def is_in_department(listing: Listing, department: str) -> bool:
@@ -97,6 +99,11 @@ def merge_details(listing: Listing, details: ListingDetails) -> Listing:
             ges_rating=details.ges_rating or listing.ges_rating,
             floor=details.floor or listing.floor,
             furnished=details.furnished if details.furnished is not None else listing.furnished,
+            charges_included=(
+                details.charges_included
+                if details.charges_included is not None
+                else listing.charges_included
+            ),
         ),
         details.published_at,
     )
