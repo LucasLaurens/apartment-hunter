@@ -22,6 +22,7 @@ from ..domain.ports import CrawlerPort, NotifierPort
 from .clock import AsyncioClock
 from .config import Settings
 from .crawlers import (
+    BienIciCrawler,
     Century21Crawler,
     CityaCrawler,
     FonciaCrawler,
@@ -51,6 +52,7 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         CityaCrawler(timeout=timeout),
         SquareHabitatCrawler(timeout=timeout),
         LocserviceCrawler(timeout=timeout),
+        BienIciCrawler(timeout=timeout),
     ]
 
 

@@ -1,0 +1,164 @@
+{
+  "total": 3,
+  "from": 0,
+  "perPage": 100,
+  "realEstateAds": [
+    {
+      "blurInfo": {
+        "type": "disk",
+        "radius": 50,
+        "bbox": [
+          6.12032889417503,
+          45.90019216979838,
+          6.121619745413431,
+          45.90109048761125
+        ],
+        "position": {
+          "lat": 45.900641328704815,
+          "lon": 6.120974319794231
+        },
+        "centroid": {
+          "lat": 45.900641328704815,
+          "lon": 6.120974319794231
+        }
+      },
+      "city": "Annecy",
+      "postalCode": "74000",
+      "id": "ag743724-556949531",
+      "adType": "rent",
+      "propertyType": "flat",
+      "description": "A LOUER , 4P+C MEUBLE de 89 m² en 1er étage à ANNECY dans un ensemble immobilier récent de très bon standing situé au cœur du centre ville, à deux pas de la gar.",
+      "title": "Location 4P+C en centre ville d'Annecy",
+      "publicationDate": "2026-10-30T17:17:44.471Z",
+      "modificationDate": "2026-11-01T05:11:20.194Z",
+      "accountType": "agency",
+      "surfaceArea": 88,
+      "roomsQuantity": 4,
+      "bedroomsQuantity": 3,
+      "isFurnished": true,
+      "floor": 1,
+      "energyClassification": "C",
+      "greenhouseGazClassification": "C",
+      "rentWithoutCharges": 2060,
+      "charges": 200,
+      "chargesMethod": "advance",
+      "photos": [
+        {
+          "url": "https://file.bienici.com/photo/ag743724-556949531_photos.ubiflow.net_743724_556949531_photos_1.jpg_INSOON_EB_5512801818_20261030165346"
+        },
+        {
+          "url": "https://file.bienici.com/photo/ag743724-556949531_photos.ubiflow.net_743724_556949531_photos_2.jpg_INSOON_EB_5512801818_20261030165346"
+        }
+      ],
+      "price": 2260,
+      "adCreatedByPro": true,
+      "heating": "radiateur gaz collectif",
+      "departmentCode": "74",
+      "transactionType": "rent"
+    },
+    {
+      "blurInfo": {
+        "type": "disk",
+        "radius": 50,
+        "bbox": [
+          6.121887526117066,
+          45.89997517086494,
+          6.1231783728916875,
+          45.90087348867778
+        ],
+        "position": {
+          "lat": 45.90042432977136,
+          "lon": 6.122532949504377
+        },
+        "centroid": {
+          "lat": 45.90042432977136,
+          "lon": 6.122532949504377
+        }
+      },
+      "city": "Annecy",
+      "postalCode": "74000",
+      "id": "century-21-202_3154_9825",
+      "adType": "rent",
+      "propertyType": "flat",
+      "description": "ANNECY PROCHE GARE - LOCATION T2 NON MEUBLÉ AVEC GRENIER + CAVE <br>Situé au 6 et dernier étage d'un immeuble avec ascenseur, cet appartement de 57m² vous offre.",
+      "publicationDate": "2026-10-23T00:14:28.630Z",
+      "modificationDate": "2026-10-24T02:37:18.139Z",
+      "accountType": "agency",
+      "accountDisplayName": "CENTURY 21 CD Immo",
+      "floor": 6,
+      "floorQuantity": 7,
+      "bedroomsQuantity": 1,
+      "roomsQuantity": 2,
+      "surfaceArea": 56.82,
+      "heating": "Collectif Radiateur Gaz",
+      "isFurnished": false,
+      "energyClassification": "C",
+      "greenhouseGazClassification": "C",
+      "price": 1145,
+      "chargesMethod": "advance",
+      "charges": 145,
+      "photos": [
+        {
+          "url": "https://file.bienici.com/photo/century-21-202_3154_9825_images.century21.fr_202_3154_c21_202_3154_9825_1_53CF5450-9457-4F32-B47C-82ECF72077FE.jpg"
+        },
+        {
+          "url": "https://file.bienici.com/photo/century-21-202_3154_9825_images.century21.fr_202_3154_c21_202_3154_9825_1_585C6ADD-242B-4557-B5E8-9DEAA87EDA15.jpg"
+        }
+      ],
+      "adCreatedByPro": true,
+      "departmentCode": "74",
+      "title": "",
+      "transactionType": "rent"
+    },
+    {
+      "blurInfo": {
+        "type": "disk",
+        "radius": 50,
+        "bbox": [
+          6.124829036771878,
+          45.896397878918336,
+          6.126119813247925,
+          45.89729619673105
+        ],
+        "position": {
+          "lat": 45.89684703782469,
+          "lon": 6.125474425009902
+        },
+        "centroid": {
+          "lat": 45.89684703782469,
+          "lon": 6.125474425009902
+        }
+      },
+      "city": "Annecy",
+      "postalCode": "74000",
+      "id": "iad-france-1051040",
+      "adType": "rent",
+      "propertyType": "flat",
+      "description": "ANNECY – AU PIED DU CHÂTEAU<br>Chemin de Tour la Reine, cet appartement de caractère bénéficie d’un emplacement pri.",
+      "title": "Location Appartement 4 pièces",
+      "publicationDate": "2026-10-17T06:56:45.401Z",
+      "modificationDate": "2026-10-21T10:48:12.033Z",
+      "accountType": "mandatary",
+      "price": 2950,
+      "surfaceArea": 115,
+      "roomsQuantity": 4,
+      "bedroomsQuantity": 2,
+      "floorQuantity": 4,
+      "isFurnished": false,
+      "photos": [
+        {
+          "url": "https://file.bienici.com/photo/iad-france-1051040_images.playiad.com_property_broadcast_2026_10_15_01a13f33c7a18d0b9a4f1c3438dd28ff.jpg"
+        },
+        {
+          "url": "https://file.bienici.com/photo/iad-france-1051040_images.playiad.com_property_broadcast_2026_10_15_01a13f33c7a64e8c634f1e3254eabcd1.jpg"
+        }
+      ],
+      "energyClassification": "E",
+      "greenhouseGazClassification": "E",
+      "adCreatedByPro": true,
+      "heating": "gaz individuel",
+      "departmentCode": "74",
+      "transactionType": "rent"
+    }
+  ]
+}

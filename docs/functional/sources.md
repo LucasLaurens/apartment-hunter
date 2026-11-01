@@ -1,6 +1,6 @@
 # Sources de données
 
-9 sites scrapés, dont un (Locservice) seulement quand les règles des sites sont ignorées. Données disponibles et limites pour chacun.
+9 sites scrapés, dont un (Bien'ici) seulement quand les règles des sites sont ignorées. Données disponibles et limites pour chacun.
 
 > **Règle du projet :** seules les plateformes exposant **publiquement** toute l'info nécessaire,
 > **sans login ni cookie de session**, et **filtrant par ville**, sont utilisées. Une source
@@ -34,9 +34,9 @@ ne change rien aux protections anti-bot : un site qui bloque un client honnête
 | **Laforêt** | Réseau agences | curl_cffi + SSR HTML | — (image) | ❌ non publiée | 1 requête (agences alentour incluses) |
 | **Citya** | Gestionnaire | curl_cffi + SSR HTML | DPE + GES (détail, SVG) | ❌ non publiée | par commune |
 | **Square Habitat** | Réseau agences | curl_cffi + JSON `ng-state` | DPE + GES (détail) | ✅ liste | 1 requête (par département) |
-| **Locservice** (règles des sites ignorées seulement) | Direct proprio | curl_cffi + SSR HTML | DPE + GES (détail) | ❌ non publiée | 1 requête (communes voisines, ~20 km) |
+| **Bien'ici** — règles des sites ignorées seulement | Portail | curl_cffi + API JSON publique | DPE + GES (liste) | ✅ liste | 1 requête (carré autour de la ville) |
 
-PAP/Century21/Laforêt/Square Habitat/Locservice couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya itèrent les communes. Le matcher filtre ensuite au rayon exact.
+PAP/Century21/Laforêt/Square Habitat/Bien'ici couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, Bien'ici par un carré autour de la ville, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya itèrent les communes. Le matcher filtre ensuite au rayon exact.
 
 ### Date de parution
 
@@ -136,7 +136,7 @@ Exceptions :
 | Site | Raison |
 |------|--------|
 | **Jinka** | Annonces derrière connexion (`/sign/in`), `/api/` interdit par `robots.txt` |
-| **Bien'ici** | Accessible sans connexion (API JSON publique), mais ses CGU interdisent la reproduction du contenu sans autorisation : dans le doute, pas de collecte (2026-10-30) |
+| **Locservice** | Le plus gros stock nouveau autour d'Annecy (107 appartements sur sa page Annecy), en HTML serveur, pages de liste autorisées par `robots.txt`. Mais ses mentions légales interdisent toute reproduction sans accord écrit (comme les CGU de Bien'ici, collecté seulement règles des sites ignorées), et contacter un propriétaire y est payant (29 €/mois relevés) : rejeté le 2026-10-31 |
 | **Figaro Immo, EntreParticuliers** | Cloudflare répond 403 à un client qui se présente sous son nom ; ils ne passaient qu'en imitant l'empreinte TLS de Chrome, ce que les règles de collecte interdisent. Retirés le 2026-10-31 |
 | **SeLoger** | DataDome + rendu JS : le crawler ne passait qu'en masquant l'automatisation (script « stealth »), ce que les règles de collecte interdisent. Retiré le 2026-10-30 |
 | **LeBonCoin** | Captcha DataDome systématique — non contournable sans solveur captcha / proxies résidentiels |

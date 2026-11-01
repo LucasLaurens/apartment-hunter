@@ -1,0 +1,77 @@
+[
+  {
+    "id": "AaA4_g7XmLxk3VI7Opsy",
+    "name": "Annecy",
+    "type": "city",
+    "admin_level": "8",
+    "insee_code": "74010",
+    "insee_codes": [
+      "74010"
+    ],
+    "postalCodes": [
+      "74000",
+      "74370",
+      "74600",
+      "74940",
+      "74960"
+    ],
+    "boundingBox": {
+      "west": 6.048412054366711,
+      "south": 45.828002368597154,
+      "east": 6.204393184681487,
+      "north": 45.97669279087877
+    },
+    "zoneIds": [
+      "-6791758"
+    ],
+    "population": 121809,
+    "score": 410.7581
+  },
+  {
+    "id": "AaA4_d-LmLxk3VI7OovL",
+    "name": "Annecy-le-Vieux",
+    "type": "delegated-city",
+    "admin_level": "9",
+    "insee_code": "74011",
+    "insee_codes": [
+      "74011"
+    ],
+    "postalCodes": [
+      "74940"
+    ],
+    "boundingBox": {
+      "west": 6.110883953496348,
+      "south": 45.89718640765074,
+      "east": 6.204393184681487,
+      "north": 45.94125146967731
+    },
+    "zoneIds": [
+      "-102267"
+    ],
+    "population": 19968,
+    "score": 31.561735
+  },
+  {
+    "id": "AaA4_fWtdyC9Kq_tzTSE",
+    "name": "Annecy",
+    "type": "delegated-city",
+    "admin_level": "9",
+    "insee_code": "74010",
+    "insee_codes": [
+      "74010"
+    ],
+    "postalCodes": [
+      "74000"
+    ],
+    "boundingBox": {
+      "west": 6.101011288860819,
+      "south": 45.84948258337479,
+      "east": 6.155930961565335,
+      "north": 45.93032959755349
+    },
+    "zoneIds": [
+      "-102480"
+    ],
+    "score": 2.917298
+  }
+]

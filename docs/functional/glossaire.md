@@ -74,14 +74,13 @@ ce réglage — voir [ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-r
 ### Source ✅
 **Où l'annonce a été trouvée** — le site scrapé, donc le crawler qui l'a ramenée.
 Valeur technique en minuscules : `pap`, `orpi`, `foncia`, `paruvendu`,
-`century21`, `laforet`, `citya`, `squarehabitat`, `locservice` (ce dernier seulement quand
-les règles des sites sont ignorées). Champ `Listing.source`.
+`century21`, `laforet`, `citya`, `squarehabitat`, `bienici`. Champ `Listing.source`.
 
 Deux familles de sources, à ne pas confondre dans les textes :
 
 | Famille | Sources | Ce qu'on y trouve |
 |---------|---------|-------------------|
-| **Portail** | PAP, ParuVendu | Annonces de multiples annonceurs |
+| **Portail** | PAP, ParuVendu, Bien'ici | Annonces de multiples annonceurs, agences comme particuliers |
 | **Réseau d'agences** | Orpi, Foncia, Laforêt, Century 21, Citya, Square Habitat | Uniquement les mandats du réseau |
 
 ### Annonceur ✅

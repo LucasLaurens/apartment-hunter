@@ -45,7 +45,7 @@ NETWORK_NAMES: Final[dict[str, str]] = {
 # Locservice carries partner agency ads too; its crawler leaves them out.
 PRIVATE_ONLY_SOURCES: Final[frozenset[str]] = frozenset({"pap", "locservice"})
 AGENCY_ONLY_SOURCES: Final[frozenset[str]] = frozenset(NETWORK_NAMES)
-MIXED_SOURCES: Final[frozenset[str]] = frozenset({"paruvendu"})
+MIXED_SOURCES: Final[frozenset[str]] = frozenset({"paruvendu", "bienici"})
 
 
 def _fold(text: str) -> str:

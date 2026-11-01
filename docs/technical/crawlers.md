@@ -44,7 +44,7 @@ crawlers tournent en parallèle sans se gêner mutuellement.
 | Laforêt | 2.0s |
 | Citya | 2.0s |
 | Square Habitat | 2.5s |
-| Locservice | 2.0s |
+| Bien'ici | 3.0s, en série (`CITY_CONCURRENCY = 1`) |
 
 ### Un seul nom, aucun déguisement
 
@@ -235,32 +235,40 @@ connaît pas (`…/auvergne-rhone-alpes/haute-savoie-74`), il est donc lu dans
 `nbEtagesBatiment`) et meublé. `robots.txt` interdit `/resultat-location` et `*/immo/*` ; la
 route `/annonces/location/bien/…` n'en relève pas.
 
-### Locservice — règles des sites ignorées seulement
+### API JSON publique (Bien'ici) — règles des sites ignorées seulement
 
-`locservice_crawler.py`, `forbids_reproduction = True` : ses mentions légales interdisent la
-reproduction sans accord écrit, il ne tourne donc que sous `SiteRules.IGNORED`. Son
-`robots.txt` autorise les pages lues (relevé le 2026-11-01). HTML serveur, `covers_radius` :
-la page commune liste la commune puis ses voisines jusqu'à ~20 km, chacune marquée
-« À 6km de Annecy », Savoie comprise (Arith depuis Annecy) — d'où **pas** de garde-fou
-département, ce n'est pas du remplissage.
+Les CGU de Bien'ici interdisent la reproduction de ses annonces : le crawler déclare
+`forbids_reproduction = True` et ne tourne que si le chasseur a choisi d'ignorer les règles des
+sites ([ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)).
+Son `robots.txt` n'interdit ni l'une ni l'autre des deux routes lues.
 
-- URL `/{département}-{code}/location-appartement-{commune}.html`, pages suivantes
-  `-p2.html`, `-p3.html` (`build_search_url`, `build_page_url`). Le département (code et nom)
-  vient de geo.api.gouv.fr par code postal (`geo_postal.resolve_department`), jamais coupé
-  des deux premiers chiffres (Corse, DOM). Le site écrit « Saint » `st` (`st-jorioz`,
-  `menthon-st-bernard`). Une page au-delà de la dernière redirige vers la dernière :
-  `_paginate` n'y trouve rien de neuf et s'arrête.
-- Cartes `li.accommodation-ad` : titre (« Appartement T2 meublé à louer » → pièces, meublé),
-  commune et code postal (`parse_commune_label`), surface, loyer nu « € / mois », extrait,
-  vignette (la plus large du `srcset`). Les cartes « Logement partenaire » sont des annonces
-  d'agence reprises d'ailleurs (iad…, « Professionnel » sur la page détail) : écartées, la
-  source reste `PRIVATE_ONLY_SOURCES`.
-- Page détail : DPE et GES (`.energy-bar-item--active`, `.pollution-bar-item--active` — la
-  barre entière est dessinée, seul l'élément actif compte ; « NA » = inconnu), étage
-  (`parse_floor` sur la description et les badges seuls, pas sur les avis d'utilisateurs de
-  la page), meublé (`detect_furnished_chip` sur les badges) et **« charges comprises »**,
-  que la carte n'écrit pas : `ListingDetails.charges_included`, replié par `merge_details`.
-  Pas de date de parution, seulement un badge « Récent ».
+Le front du site lit ses annonces dans une API JSON publique, sans connexion, et le crawler fait
+la même chose, sous `CRAWLER_USER_AGENT` et par `_fetch_html` :
+
+1. `https://res.bienici.com/suggest.json?q={ville}` — le suggesteur de lieux du site ; l'entrée
+   `type: "city"` du même nom (et portant le code postal de la commune, pour les homonymes)
+   donne sa `boundingBox`, dont le milieu sert de centre. Mis en cache pour la vie du crawler,
+   une réponse seulement.
+2. `https://www.bienici.com/realEstateAds.json?filters={…}` — `filterType: "rent"`,
+   `propertyType: ["flat"]`, `onTheMarket: [true]`, tri par date de parution, `size` 100 et
+   `from` pour la page (`MAX_PAGES` = 4). La zone est le filtre `limit` (avec
+   `mapMode: "enabled"`) : un **polyline encodé** (format Google) du carré circonscrit au rayon
+   (`build_search_square`, `format_polyline`). Une recherche couvre donc tout le rayon
+   (`covers_radius`) et le matcher découpe le cercle.
+
+Champs lus : `price` est le loyer **charges comprises** (sur chaque annonce qui donne les deux,
+il vaut `rentWithoutCharges + charges`) ; avec `charges`, le prix est décomposé loyer + charges,
+sans `charges` il reste un loyer nu marqué « charges non communiquées ». `surfaceArea`,
+`roomsQuantity`, `floor` / `floorQuantity` (dernier étage quand ils sont égaux ; sans `floor`,
+`parse_floor` sur la description), `energyClassification` / `greenhouseGazClassification`,
+`isFurnished`, `city`, `postalCode`, `blurInfo.position` (position floutée à 50 m le plus souvent ;
+écartée quand le flou est la commune entière, `cityOrArrondissement`), `photos[].url`,
+`publicationDate` (date du site), `accountDisplayName` (annonceur, absent sur près d'une annonce
+sur deux). L'URL d'une annonce est `https://www.bienici.com/annonce/{id}`, route que le front
+reconnaît. Une annonce qui ne serait pas une location d'appartement est ignorée.
+
+Une recherche ne porte qu'une ville de base : `CITY_CONCURRENCY = 1` garde 3 s entre deux
+requêtes. Constat du 2026-11-01, Annecy / 20 km : 145 appartements en 2 pages.
 
 ### httpx + BeautifulSoup (PAP)
 
@@ -412,6 +420,7 @@ CrawlAllSources.execute()
     ├── Century21Crawler.fetch()  ──→ curl_cffi
     ├── LaforetCrawler.fetch()    ──→ curl_cffi
     ├── CityaCrawler.fetch()      ──→ curl_cffi
+    ├── BienIciCrawler.fetch()    ──→ curl_cffi (règles des sites ignorées seulement)
     ├── SquareHabitatCrawler.fetch() ──→ curl_cffi
     ├── LocserviceCrawler.fetch() ──→ curl_cffi (règles des sites ignorées seulement)
     └── await all → save_many()
@@ -423,10 +432,10 @@ CrawlAllSources.execute()
 
 Pour éviter de relancer chaque source commune par commune, le crawl dispatche deux filtres :
 
-- **Sources `covers_radius = True`** (PAP, Century21, Laforêt, Square Habitat, Locservice) : le
-  site couvre déjà la zone (rayon natif PAP, communes voisines pour Century21 et Laforêt — dont la
-  page ville liste aussi le stock des agences alentour —, département entier pour Square Habitat,
-  voisines jusqu'à ~20 km pour Locservice : un rayon de filtre plus large n'y voit pas au-delà).
+- **Sources `covers_radius = True`** (PAP, Century21, Laforêt, Square Habitat, Bien'ici) : le site
+  couvre déjà la zone (rayon natif PAP, communes voisines pour Century21 et Laforêt — dont la page
+  ville liste aussi le stock des agences alentour —, département entier pour Square Habitat,
+  carré autour de la ville pour Bien'ici).
   Elles reçoivent le filtre **de base** → **une seule recherche** par ville cible.
 - **Sources par ville exacte** (Orpi, Foncia, ParuVendu, Citya) : reçoivent le filtre **étendu** aux
   communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon). Ce filtre étendu

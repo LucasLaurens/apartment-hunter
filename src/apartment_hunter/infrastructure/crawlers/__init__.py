@@ -1,4 +1,5 @@
 from .base_crawler import BaseCrawler, ListingDetails, build_listing_id
+from .bienici_crawler import BienIciCrawler
 from .century21_crawler import Century21Crawler
 from .citya_crawler import CityaCrawler
 from .foncia_crawler import FonciaCrawler
@@ -12,6 +13,7 @@ from .squarehabitat_crawler import SquareHabitatCrawler
 
 __all__ = [
     "BaseCrawler",
+    "BienIciCrawler",
     "ListingDetails",
     "build_listing_id",
     "parse_french_date",
