@@ -9,6 +9,7 @@ from ..application.use_cases import (
     GetTopListings,
     ListDismissedHomes,
     ManageFilters,
+    ManageSiteRules,
     MapFilterHomes,
     NotifyNewListings,
     OpenHome,
@@ -139,6 +140,9 @@ class Container:
 
     def make_clean_use_case(self) -> CleanListings:
         return CleanListings(repository=self.repository, geocoding=self.geocoding)
+
+    def make_site_rules_use_case(self) -> ManageSiteRules:
+        return ManageSiteRules(repository=self.repository)
 
     def make_manage_filters_use_case(self) -> ManageFilters:
         return ManageFilters(repository=self.repository)

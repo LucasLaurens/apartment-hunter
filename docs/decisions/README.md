@@ -18,6 +18,7 @@ Le vocabulaire employé ici est défini dans le [glossaire](../functional/glossa
 | [0009](0009-le-chasseur-ecarte-un-logement.md) | Le chasseur peut écarter un logement ; écart et ouverture se souviennent du logement | En vigueur |
 | [0010](0010-position-au-marche-contre-la-carte-des-loyers.md) | La position au marché se mesure contre la Carte des loyers, jamais contre nos annonces | En vigueur |
 | [0011](0011-le-theme-est-un-choix-du-chasseur.md) | Le thème est un choix du chasseur : Clair, Sombre ou Système, une seule liste de couleurs | Acceptée, implémentée |
+| [0012](0012-le-chasseur-peut-ignorer-les-regles-des-sites.md) | Le chasseur peut ignorer robots.txt et les CGU des sites, jamais l'anti-bot | En vigueur |
 
 ## Format
 

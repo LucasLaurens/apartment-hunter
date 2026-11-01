@@ -287,6 +287,20 @@ CREATE TABLE dismissals (
 
 **Rôle :** un logement *écarté* par le chasseur ([ADR-0009](../decisions/0009-le-chasseur-ecarte-un-logement.md)). **Pas de clé étrangère vers `listings`, exprès** : la purge supprime les lignes d'annonce, et l'écart doit leur survivre. Une annonce est masquée quand elle serait regroupée avec une annonce écartée au sens de *Doublon* — même URL, ou même clé de logement sur une autre source (`DismissedHomes`, `domain/services/dismissals.py`). Réécarter la même annonce remplace la ligne. **Restaurer** pose `restored_at` sans supprimer la ligne : l'écart ne masque plus et ne compte plus, mais la trace « déjà jugé une fois » reste (`list_dismissals` ne rend que les écarts en vigueur). La photo figée (total CC, surface, étage, DPE, annonceur, meublé) nourrit les suggestions de critère.
 
+### Table `app_settings`
+
+```sql
+CREATE TABLE app_settings (
+    key TEXT PRIMARY KEY,          -- 'site_rules'
+    value TEXT NOT NULL            -- 'honoured' (défaut, ligne absente) | 'ignored'
+);
+```
+
+**Rôle :** les choix du chasseur qui valent pour tout crawl, quel que soit l'écran qui
+les a faits. Une seule clé aujourd'hui, `site_rules` (`SiteRules`,
+[ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)) :
+absente, les règles des sites sont respectées.
+
 ### Table `openings`
 
 ```sql

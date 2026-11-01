@@ -64,6 +64,13 @@ correspondance.
 **Ne pas confondre** avec la déduplication par URL, qui est exacte et automatique
 (`INSERT OR IGNORE`), et n'attrape que la même annonce revue au crawl suivant.
 
+### Règles des sites ✅
+Ce que chaque site demande aux robots : son `robots.txt` et ses conditions
+d'utilisation. **Respectées** par défaut ; **ignorées** sur choix explicite du chasseur,
+à ses risques (Paramètres, ou `hunt rules ignore`). Ne pas confondre avec la protection
+**anti-bot** d'un site (Cloudflare, captcha), qui n'est jamais contournée, quel que soit
+ce réglage — voir [ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md).
+
 ### Source ✅
 **Où l'annonce a été trouvée** — le site scrapé, donc le crawler qui l'a ramenée.
 Valeur technique en minuscules : `pap`, `orpi`, `foncia`, `paruvendu`,

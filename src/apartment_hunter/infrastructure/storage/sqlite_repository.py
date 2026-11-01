@@ -30,6 +30,7 @@ from ...domain.value_objects import (
     Location,
     Price,
     PublicationSource,
+    SiteRules,
 )
 from .dismissal_codec import DISMISSAL_COLUMNS, dismissal_from_row, dismissal_to_row
 from .filter_codec import filter_from_json, filter_to_json
@@ -50,6 +51,7 @@ _PRICE_SLACK_RATIO = 0.2  # ±20% — nearby towns priced just outside stay cand
 _CANDIDATES_PER_RESULT = 50  # rows read per wanted result (most get filtered out)
 _MAX_CANDIDATES = 500  # hard cap on one query, whatever the requested limit
 _UNNOTIFIED_LIMIT = 200  # newest unnotified rows considered per notification run
+_SITE_RULES_KEY = "site_rules"
 # OR IGNORE: the first opening of a listing is the one kept.
 _INSERT_OPENING_SQL = (
     f"INSERT OR IGNORE INTO openings ({', '.join(OPENING_COLUMNS)}) "
@@ -509,6 +511,20 @@ class SqliteRepository(ListingRepositoryPort):
         await self._conn.execute(
             "UPDATE dismissals SET restored_at = ? WHERE listing_id = ? AND restored_at IS NULL",
             (restored_at.isoformat(), listing_id),
+        )
+        await self._conn.commit()
+
+    async def load_site_rules(self) -> SiteRules:
+        async with self._conn.execute(
+            "SELECT value FROM app_settings WHERE key = ?", (_SITE_RULES_KEY,)
+        ) as cur:
+            row = await cur.fetchone()
+        return SiteRules(row["value"]) if row else SiteRules.HONOURED
+
+    async def save_site_rules(self, rules: SiteRules) -> None:
+        await self._conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)",
+            (_SITE_RULES_KEY, rules.value),
         )
         await self._conn.commit()
 

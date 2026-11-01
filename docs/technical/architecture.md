@@ -213,7 +213,8 @@ src/apartment_hunter/
 │   │   ├── location.py           ← Location (city + GPS)
 │   │   ├── market_position.py    ← RentReference, MarketPosition, NoMarketPosition (ADR-0010)
 │   │   ├── price.py              ← Price (Decimal, charges séparées)
-│   │   └── publication_source.py ← SITE ou FIRST_SEEN
+│   │   ├── publication_source.py ← SITE ou FIRST_SEEN
+│   │   └── site_rules.py         ← SiteRules (règles des sites respectées ou ignorées, ADR-0012)
 │   ├── ports/
 │   │   ├── listing_repository.py
 │   │   ├── cache_port.py
@@ -247,6 +248,7 @@ src/apartment_hunter/
 │       ├── dismiss_home.py        ← écarter un logement, avec sa raison
 │       ├── get_top_listings.py
 │       ├── manage_filters.py
+│       ├── manage_site_rules.py   ← lire / changer les règles des sites (web et `hunt rules`)
 │       ├── map_filter_homes.py    ← la carte : logements par commune, communes du rayon
 │       ├── notify_new_listings.py
 │       ├── open_home.py           ← ouvrir un logement (revue et page web)

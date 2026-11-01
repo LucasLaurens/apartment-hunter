@@ -8,6 +8,7 @@ from rich.prompt import Confirm
 
 from ...application.use_cases import WatchReport
 from ...domain.entities import DEFAULT_RADIUS_KM, MIN_INTERVAL_MINUTES, SearchFilter
+from ...domain.value_objects import SiteRules
 from ...infrastructure.container import Container
 from ..web.request_guard import SERVE_HOST_ENV
 from .adhoc import AdHocCriteria
@@ -21,6 +22,11 @@ app = typer.Typer(
 )
 filter_app = typer.Typer(help="Manage search filters")
 app.add_typer(filter_app, name="filter")
+rules_app = typer.Typer(
+    help="Whether crawls follow robots.txt and the sites' terms (shared with the web page)",
+    invoke_without_command=True,
+)
+app.add_typer(rules_app, name="rules")
 
 _DEFAULT_SERVE_HOST = "127.0.0.1"
 _DEFAULT_SERVE_PORT = 8080
@@ -379,6 +385,60 @@ def delete_filter(filter_id: str) -> None:
         console.print(f"[green]Filter '{filter_id}' deleted.[/]")
 
     asyncio.run(_run())
+
+
+_SITE_RULES_LABELS = {
+    SiteRules.HONOURED: "respectées : robots.txt et les conditions d'utilisation des sites",
+    SiteRules.IGNORED: "ignorées : robots.txt et les conditions d'utilisation des sites",
+}
+_IGNORE_WARNING = (
+    "Bien'ici, Locservice, FNAIM et 2A Immobilier interdisent l'extraction automatique de "
+    "leurs annonces, et robots.txt ferme des pages de PAP et de Foncia. En ignorant ces "
+    "règles, vous en êtes seul responsable. Les protections anti-bot restent respectées."
+)
+
+
+def _save_site_rules(rules: SiteRules) -> None:
+    async def _run() -> None:
+        async with open_container() as container:
+            await container.make_site_rules_use_case().save_site_rules(rules)
+
+    asyncio.run(_run())
+    console.print(f"Règles des sites {_SITE_RULES_LABELS[rules]}, dès la prochaine recherche.")
+
+
+@rules_app.callback()
+def print_rules(ctx: typer.Context) -> None:
+    """Show the current choice (ADR-0012)."""
+    if ctx.invoked_subcommand is not None:
+        return
+    setup_logging()
+
+    async def _run() -> SiteRules:
+        async with open_container() as container:
+            return await container.make_site_rules_use_case().load_site_rules()
+
+    console.print(f"Règles des sites {_SITE_RULES_LABELS[asyncio.run(_run())]}.")
+
+
+@rules_app.command("ignore")
+def ignore_rules(
+    yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip the confirmation")] = False,
+) -> None:
+    """Set robots.txt and the sites' terms aside, at your own risk."""
+    setup_logging()
+    console.print(f"[yellow]{_IGNORE_WARNING}[/]")
+    if not yes and not Confirm.ask("Ignorer les règles des sites ?", default=False):
+        console.print("Rien n'a changé.")
+        return
+    _save_site_rules(SiteRules.IGNORED)
+
+
+@rules_app.command("honour")
+def save_honoured_rules() -> None:
+    """Follow robots.txt and the sites' terms again (the default)."""
+    setup_logging()
+    _save_site_rules(SiteRules.HONOURED)
 
 
 @app.command()

@@ -12,6 +12,16 @@
 
 ---
 
+## Règles des sites : respectées, ou ignorées sur votre choix
+
+Par défaut, les règles ci-dessus s'appliquent. Le réglage **Règles des sites** (page
+Paramètres, ou `hunt rules ignore`) les met de côté à vos risques
+([ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)) :
+`robots.txt` n'est plus lu (recherche et rayon de PAP, pagination de Foncia), et les
+sources refusées pour leurs seules conditions d'utilisation entrent dans le crawl. Il
+ne change rien aux protections anti-bot : un site qui bloque un client honnête
+(Cloudflare, DataDome, captcha) reste bloqué, et aucun compte n'est créé.
+
 ## État des sources
 
 | Source | Type | Méthode | DPE / GES | Date de parution | Rayon |

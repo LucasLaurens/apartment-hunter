@@ -7,6 +7,7 @@ from loguru import logger
 
 from ...domain.entities import Listing, SearchFilter
 from ...domain.ports import CrawlerPort, ListingRepositoryPort
+from ...domain.value_objects import SiteRules
 
 # Cap any single source so one slow/hung crawler never stalls the whole crawl.
 SOURCE_TIMEOUT_SECONDS = 180.0
@@ -72,20 +73,21 @@ class CrawlAllSources:
         the communes in radius) so they still reach surrounding towns.
         """
         expanded = expanded_filter or search_filter
+        crawlers = await self._select_crawlers()
         tasks = [
             self._crawl_one(
                 crawler,
                 search_filter if getattr(crawler, "covers_radius", False) else expanded,
                 report,
             )
-            for crawler in self._crawlers
+            for crawler in crawlers
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         all_apartments: list[Listing] = []
         fresh_urls: set[str] = set()
         authoritative: set[str] = set()
-        for crawler, result in zip(self._crawlers, results, strict=True):
+        for crawler, result in zip(crawlers, results, strict=True):
             if isinstance(result, BaseException):
                 logger.error(f"Crawler {crawler.source_name} failed: {result}")
             else:
@@ -105,6 +107,22 @@ class CrawlAllSources:
             fresh_urls=frozenset(fresh_urls),
             authoritative_sources=frozenset(authoritative),
         )
+
+    async def _select_crawlers(self) -> list[CrawlerPort]:
+        """The sources this crawl may ask, each told the hunter's choice (ADR-0012).
+
+        Read at every crawl, so a change made in the web page or the CLI applies to the
+        next tick of a running watch without restarting it.
+        """
+        rules = await self._repository.load_site_rules()
+        selected = [
+            crawler
+            for crawler in self._crawlers
+            if rules is SiteRules.IGNORED or not crawler.forbids_reproduction
+        ]
+        for crawler in selected:
+            crawler.apply_site_rules(rules)
+        return selected
 
     async def _crawl_one(
         self, crawler: CrawlerPort, search_filter: SearchFilter, report: ProgressReport

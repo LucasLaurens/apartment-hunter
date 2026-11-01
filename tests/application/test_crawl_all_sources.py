@@ -1,6 +1,7 @@
 import pytest
 
 from apartment_hunter.application.use_cases import CrawlAllSources, SourceProgress, SourceState
+from apartment_hunter.domain.value_objects import SiteRules
 from tests.fakes.builders import build_listing, build_search_filter
 from tests.fakes.in_memory_crawler import InMemoryCrawler
 from tests.fakes.in_memory_listing_repository import InMemoryListingRepository
@@ -109,3 +110,37 @@ async def test_each_source_reports_how_its_crawl_went(
         "failing": (SourceState.FAILED, 0),
     }
     assert {r.source for r in reports if r.state is SourceState.RUNNING} == set(final)
+
+
+async def test_a_source_whose_terms_forbid_extraction_is_left_alone_by_default(
+    repository: InMemoryListingRepository,
+) -> None:
+    # Arrange
+    allowed = InMemoryCrawler("allowed", [build_listing()])
+    forbidding = InMemoryCrawler("forbidding", [build_listing()], forbids_reproduction=True)
+    use_case = CrawlAllSources(crawlers=[allowed, forbidding], repository=repository)
+
+    # Act
+    outcome = await use_case.execute_detailed(build_search_filter())
+
+    # Assert — never asked, not even once
+    assert forbidding.fetch_calls == []
+    assert outcome.authoritative_sources == {"allowed"}
+    assert allowed.applied_rules == [SiteRules.HONOURED]
+
+
+async def test_ignoring_the_sites_rules_crawls_every_source_and_says_so_to_each(
+    repository: InMemoryListingRepository,
+) -> None:
+    # Arrange — the hunter's own choice, at their own risk (ADR-0012)
+    await repository.save_site_rules(SiteRules.IGNORED)
+    allowed = InMemoryCrawler("allowed", [build_listing()])
+    forbidding = InMemoryCrawler("forbidding", [build_listing()], forbids_reproduction=True)
+    use_case = CrawlAllSources(crawlers=[allowed, forbidding], repository=repository)
+
+    # Act
+    outcome = await use_case.execute_detailed(build_search_filter())
+
+    # Assert
+    assert outcome.authoritative_sources == {"allowed", "forbidding"}
+    assert allowed.applied_rules == forbidding.applied_rules == [SiteRules.IGNORED]

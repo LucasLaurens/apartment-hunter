@@ -93,6 +93,13 @@ TABLE_MIGRATIONS: list[str] = [
         PRIMARY KEY (filter_id, source)
     )
     """,
+    # Settings the hunter chooses for every crawl, one row per key (ADR-0012).
+    """
+    CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    )
+    """,
     # The first time the hunter opened each listing, with what recognises its home. No
     # link to `listings`: an opening must outlive the purge (ADR-0009).
     """

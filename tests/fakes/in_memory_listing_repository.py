@@ -10,6 +10,7 @@ from apartment_hunter.domain.value_objects import (
     DismissalReason,
     ListingSort,
     Price,
+    SiteRules,
 )
 
 
@@ -20,6 +21,7 @@ class InMemoryListingRepository(ListingRepositoryPort):
         self._filters: dict[str, SearchFilter] = {}
         self._dismissals: dict[str, Dismissal] = {}  # listing_id → dismissal
         self._openings: dict[str, Opening] = {}  # listing_id → first opening
+        self._site_rules = SiteRules.HONOURED
         self._source_successes: dict[str, dict[str, datetime]] = defaultdict(dict)
         self._refusals: dict[tuple[str, DismissalReason, str], CriterionRefusal] = {}
 
@@ -112,6 +114,12 @@ class InMemoryListingRepository(ListingRepositoryPort):
 
     async def list_criterion_refusals(self) -> list[CriterionRefusal]:
         return list(self._refusals.values())
+
+    async def load_site_rules(self) -> SiteRules:
+        return self._site_rules
+
+    async def save_site_rules(self, rules: SiteRules) -> None:
+        self._site_rules = rules
 
     async def save_filter(self, search_filter: SearchFilter) -> None:
         self._filters[search_filter.id] = search_filter

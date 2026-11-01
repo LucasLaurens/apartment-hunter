@@ -93,6 +93,10 @@ same commit. Full rationale: `docs/technical/conventions.md`.
   (`RobotsRules`, RFC 9309) gates `_fetch_html` and `_get_throttled`, read once a day per
   host; 4xx = no rules, 5xx/no answer = everything disallowed; `Crawl-delay` honoured.
   Wildcards need Python ≥ 3.13 (`test_robots_rules.py` fails otherwise)
+- Site rules (ADR-0012): `SiteRules` (HONOURED by default, stored in `app_settings`), set in
+  the web Paramètres page or `hunt rules`. `CrawlAllSources` reads it at every crawl,
+  tells each crawler (`apply_site_rules`) and leaves out `forbids_reproduction` sources
+  unless IGNORED; IGNORED skips the robots gate. It never touches the anti-bot line below
 - No anti-bot evasion: no stealth scripts, no faked `navigator.webdriver`, no TLS
   impersonation, no CAPTCHA solving, no account. A source that only passes that way is
   removed (SeLoger 2026-10-30; Figaro, EntreParticuliers 2026-10-31). Held by
@@ -267,6 +271,7 @@ hunt filter list         # list saved filters
 hunt filter show <id>    # show filter details
 hunt filter delete <id>  # delete filter
 hunt clean               # drop listings no filter wants + unseen 7 days (--unseen-days N, --cache, -y)
+hunt rules               # site rules: show; `hunt rules ignore` / `hunt rules honour` (ADR-0012)
 ```
 
 ## Env Vars (see .env.example)

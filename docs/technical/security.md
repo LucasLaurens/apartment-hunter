@@ -124,7 +124,7 @@ Un crawler trop agressif peut :
 ### Ce qui est recommandé
 
 - Ne pas descendre en dessous de 10 minutes d'intervalle entre cycles
-- `robots.txt` est appliqué par le code (`RobotsRules`, voir crawlers.md) : rien à surveiller à la main
+- `robots.txt` est appliqué par le code (`RobotsRules`, voir crawlers.md) : rien à surveiller à la main, sauf si le chasseur choisit d'ignorer les règles des sites (ADR-0012) ; les protections anti-bot restent respectées dans tous les cas
 - En cas de 429 (Too Many Requests), augmenter `RATE_LIMIT_SECONDS` dans `.env` (le retry `_fetch_page` absorbe déjà les 429 passagers)
 
 ---

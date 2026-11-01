@@ -77,6 +77,13 @@ Les jokers ne sont lus par `urllib.robotparser` qu'à partir de Python 3.13 : en
 `Disallow: /*?*` laissait passer toute URL à paramètres. D'où le plancher `>=3.13` du projet,
 tenu par `tests/infrastructure/test_robots_rules.py`.
 
+Quand le chasseur choisit d'ignorer les règles des sites (`SiteRules.IGNORED`,
+[ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)),
+`CrawlAllSources` le dit à chaque crawler (`apply_site_rules`) et le garde laisse tout
+passer sans lire `robots.txt`. Une source dont les CGU interdisent l'extraction se
+déclare `forbids_reproduction = True` : elle n'entre dans le crawl que dans ce mode. Le
+reste de la page (nom honnête, pas d'imitation, refus respecté) vaut dans les deux modes.
+
 Constats au premier passage (2026-10-31) : PAP interdit toute URL à paramètres
 (`Disallow: /*?*`), donc sa recherche de commune (`/json/ac-geo?q=`), son rayon (`?rayon=`) et
 sa page 2 ; Foncia aussi (`Disallow: /*?`), sa page 2 est donc sautée.

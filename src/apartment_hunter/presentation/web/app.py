@@ -15,7 +15,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from ...application.use_cases import ListingNotFoundError
 from ...application.use_cases.get_top_listings import EVERY_SOURCE, PAGE_SIZE
 from ...domain.entities import FilterBoundError, SearchFilter
-from ...domain.value_objects import ListingSort
+from ...domain.value_objects import ListingSort, SiteRules
 from ...infrastructure.config import get_settings
 from ...infrastructure.container import Container
 from ..dismissal_reasons import REASON_KEYS
@@ -234,6 +234,24 @@ async def read_area(cities: str, radius_km: float) -> dict[str, Any]:
     if not preview.cities:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Au moins une ville.")
     return filter_area_to_dict(await _get_container().make_map_use_case().find_area(preview))
+
+
+@app.get("/api/settings/site-rules")
+async def read_site_rules() -> dict[str, str]:
+    rules = await _get_container().make_site_rules_use_case().load_site_rules()
+    return {"rules": rules.value}
+
+
+@app.put("/api/settings/site-rules")
+async def update_site_rules(body: dict[str, Any]) -> dict[str, str]:
+    """The hunter's choice for every crawl from the next one (ADR-0012)."""
+    try:
+        rules = SiteRules(str(body.get("rules")))
+    except ValueError as exc:
+        allowed = ", ".join(r.value for r in SiteRules)
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"rules: {allowed}") from exc
+    await _get_container().make_site_rules_use_case().save_site_rules(rules)
+    return {"rules": rules.value}
 
 
 @app.get("/api/dismissal-reasons")

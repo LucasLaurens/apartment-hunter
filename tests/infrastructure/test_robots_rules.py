@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import pytest
 from faker import Faker
 
+from apartment_hunter.domain.value_objects import SiteRules
 from apartment_hunter.infrastructure.crawlers.base_crawler import BaseCrawler
 from apartment_hunter.infrastructure.crawlers.robots import (
     ROBOTS_TTL_SECONDS,
@@ -194,3 +195,17 @@ async def test_wildcards_are_read_as_rfc_9309_says() -> None:
     assert not await rules.is_allowed(f"{site}/annonce/annecy?rayon=20")
     assert not await rules.is_allowed(f"{site}/fin")
     assert await rules.is_allowed(f"{site}/fine")
+
+
+async def test_ignoring_the_sites_rules_skips_robots_txt_entirely(site: str) -> None:
+    # Arrange — the hunter's own choice (ADR-0012); the anti-bot line does not move
+    crawler = _SiteCrawler(site)
+    crawler.apply_site_rules(SiteRules.IGNORED)
+    forbidden = f"/prive/{_fake.slug()}"
+
+    # Act
+    body = await crawler.read_html(f"{site}{forbidden}")
+
+    # Assert — robots.txt never asked, the page fetched
+    assert body == "<p>ok</p>"
+    assert _SiteHandler.paths == [forbidden]

@@ -17,6 +17,7 @@ const API = Object.freeze({
   dismiss: id => `/api/listings/${encodeURIComponent(id)}/dismiss`,
   dismissal: id => `/api/dismissals/${encodeURIComponent(id)}`,
   filterMap: id => `/api/filters/${encodeURIComponent(id)}/map`,
+  SITE_RULES: '/api/settings/site-rules',
   area: (cities, radiusKm) => `/api/area?cities=${encodeURIComponent(cities)}&radius_km=${encodeURIComponent(radiusKm)}`,
   // The source comes back from the address bar, so every value is encoded, never pasted.
   listings: (filterId, page, sort, source) =>
@@ -145,6 +146,8 @@ const CSS = Object.freeze({
 
 // What the main area shows. Background refreshes only redraw the listings view.
 const VIEW = Object.freeze({LISTINGS: 'listings', SETTINGS: 'settings', DISMISSED: 'dismissed'});
+// Mirrors SiteRules (domain/value_objects/site_rules.py), held by test_web_asset_guards.py.
+const SITE_RULES = Object.freeze({HONOURED: 'honoured', IGNORED: 'ignored'});
 
 // The map (ticket 14). The library is the page's only third-party code: pinned to an
 // exact version, integrity-checked, and fetched only when a map is opened.
@@ -854,6 +857,35 @@ function showSidePage(view, linkId, html) {
 
 function openSettings() {
   showSidePage(VIEW.SETTINGS, EL.SETTINGS_LINK, settingsPageHtml());
+  loadSiteRules();
+}
+
+// The box starts disabled and unticked: what the server says, or nothing, never a guess.
+async function loadSiteRules() {
+  const box = el('siteRulesIgnored');
+  try {
+    const res = await fetch(API.SITE_RULES);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    box.checked = (await res.json()).rules === SITE_RULES.IGNORED;
+    box.disabled = false;
+  } catch(e) {
+    el('siteRulesStatus').textContent = `Réglage illisible (${e.message}) : rechargez la page.`;
+  }
+}
+
+async function saveSiteRules(box) {
+  const rules = box.checked ? SITE_RULES.IGNORED : SITE_RULES.HONOURED;
+  box.disabled = true;
+  try {
+    const res = await sendJson(API.SITE_RULES, HTTP.PUT, {rules});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast(box.checked ? 'Règles des sites ignorées à partir de la prochaine recherche' : 'Règles des sites respectées à partir de la prochaine recherche');
+  } catch(e) {
+    box.checked = !box.checked;
+    showErrorToast(`Réglage non enregistré (${e.message}) : rien n’a changé.`);
+  } finally {
+    box.disabled = false;
+  }
 }
 
 async function closeSidePage() {
@@ -897,10 +929,17 @@ function settingsPageHtml() {
   return `
     <section class="settings-page" aria-labelledby="settingsTitle">
       <h1 id="settingsTitle">Paramètres</h1>
-      <p class="settings-hint">Réglages de cette interface, enregistrés dans ce navigateur.</p>
       <h2 class="settings-section" id="themeTitle">Apparence</h2>
-      <p class="settings-hint">Le terminal (<code>hunt review</code>) garde les couleurs de votre terminal.</p>
+      <p class="settings-hint">Enregistrée dans ce navigateur. Le terminal (<code>hunt review</code>) garde les couleurs de votre terminal.</p>
       <fieldset class="theme-options" aria-labelledby="themeTitle">${options}</fieldset>
+      <h2 class="settings-section" id="siteRulesTitle">Collecte des annonces</h2>
+      <p class="settings-hint">Enregistrée sur ce poste, pour la page web comme pour le terminal (<code>hunt rules</code>). S’applique dès la prochaine recherche.</p>
+      <label class="settings-toggle">
+        <input type="checkbox" id="siteRulesIgnored" disabled onchange="saveSiteRules(this)" aria-describedby="siteRulesHint siteRulesStatus">
+        <span>Ignorer robots.txt et les conditions d’utilisation des sites</span>
+      </label>
+      <p class="settings-hint" id="siteRulesHint">Rouvre Bien’ici, Locservice, FNAIM, 2A Immobilier et les pages que robots.txt interdit (recherche de PAP, pagination de Foncia). Ces sites interdisent l’extraction automatique de leurs annonces : vous en êtes seul responsable. Les protections anti-bot restent respectées : un site qui bloque (Cloudflare, captcha) reste bloqué.</p>
+      <p class="settings-hint" id="siteRulesStatus" role="status"></p>
       <button type="button" class="btn settings-back" onclick="closeSidePage()">${icon(ICON.CHEVRON_LEFT)} Retour aux résultats</button>
     </section>`;
 }

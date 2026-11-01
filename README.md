@@ -124,6 +124,8 @@ défaut, 5 au minimum) et l'alerte (15 min).
 
 Sources retirées : **SeLoger** (ne passait DataDome qu'en masquant l'automatisation), **Figaro Immo** et **EntreParticuliers** (Cloudflare refuse un client qui ne se fait pas passer pour Chrome), Jinka (login), **LeBonCoin** (captcha DataDome), **Logic-Immo** (SPA sans accès scraping pur). Détails : [Sources](docs/functional/sources.md).
 
+Le réglage **Règles des sites** (Paramètres, ou `hunt rules ignore`) rouvre à vos risques les sources refusées pour leur `robots.txt` ou leurs CGU ; les protections anti-bot restent respectées ([ADR-0012](docs/decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)).
+
 ---
 
 ## Commandes CLI
@@ -160,6 +162,9 @@ hunt filter delete <id>            # Supprimer un filtre
 hunt clean                         # Supprimer les annonces hors filtre et celles non revues depuis 7 jours (confirmation)
 hunt clean --unseen-days 2         # … non revues depuis 2 jours (0 = toutes) ; -y sans confirmation
 hunt clean --cache                 # Effacer aussi la Carte des loyers téléchargée (retéléchargée au besoin)
+hunt rules                         # Règles des sites : respectées ou ignorées (ADR-0012)
+hunt rules ignore                  # Ignorer robots.txt et les CGU des sites, à vos risques
+hunt rules honour                  # Les respecter de nouveau (défaut)
 ```
 
 ---

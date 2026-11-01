@@ -19,7 +19,7 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 
 from ...domain.entities import Listing
 from ...domain.ports import CrawlerPort
-from ...domain.value_objects import DpeRating, Floor, PublicationSource
+from ...domain.value_objects import DpeRating, Floor, PublicationSource, SiteRules
 from ..cache.ttl_cache import DETAIL_CACHE
 from .robots import RobotsDisallowedError, RobotsRules
 
@@ -255,6 +255,7 @@ class BaseCrawler(CrawlerPort, ABC):
         self._pace_lock = asyncio.Lock()
         self._next_slot_at: float = 0.0
         self._robots = RobotsRules(CRAWLER_USER_AGENT, self._read_robots)
+        self._site_rules = SiteRules.HONOURED
         self._crawl_delay_seconds = 0.0  # what the site's robots.txt asks, if more
 
     def resolve_url(self, href: str) -> str:
@@ -287,11 +288,17 @@ class BaseCrawler(CrawlerPort, ABC):
             spacing = max(self.compute_request_spacing_seconds(), self._crawl_delay_seconds)
             self._next_slot_at = started + spacing
 
+    def apply_site_rules(self, rules: SiteRules) -> None:
+        self._site_rules = rules
+
     async def _is_allowed_by_robots(self, url: str) -> bool:
         """Whether the site's robots.txt lets this crawler fetch `url`; logs a refusal.
 
         Also adopts the site's `Crawl-delay` when it asks for more than our own pace.
+        When the hunter chose to ignore the sites' rules, robots.txt is not even read.
         """
+        if self._site_rules is SiteRules.IGNORED:
+            return True
         self._crawl_delay_seconds = await self._robots.find_crawl_delay(url)
         if await self._robots.is_allowed(url):
             return True

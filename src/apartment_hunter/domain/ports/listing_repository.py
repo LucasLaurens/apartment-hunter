@@ -3,7 +3,7 @@ from datetime import datetime
 
 from ..entities import Dismissal, Listing, Opening, SearchFilter
 from ..services.criterion_suggestions import CriterionRefusal
-from ..value_objects import DEFAULT_LISTING_SORT, ListingSort
+from ..value_objects import DEFAULT_LISTING_SORT, ListingSort, SiteRules
 
 
 class ListingRepositoryPort(ABC):
@@ -93,6 +93,13 @@ class ListingRepositoryPort(ABC):
     @abstractmethod
     async def list_criterion_refusals(self) -> list[CriterionRefusal]:
         """Every refusal kept, all filters together. Survives the purge."""
+
+    @abstractmethod
+    async def load_site_rules(self) -> SiteRules:
+        """The hunter's choice for every crawl; HONOURED until they change it."""
+
+    @abstractmethod
+    async def save_site_rules(self, rules: SiteRules) -> None: ...
 
     @abstractmethod
     async def save_filter(self, search_filter: SearchFilter) -> None: ...
