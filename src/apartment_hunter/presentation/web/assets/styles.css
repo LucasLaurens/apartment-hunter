@@ -1,0 +1,614 @@
+/* Apartment Hunter — tokens and rationale: DESIGN.md.
+   Every colour is written once, as light-dark(light, dark): `color-scheme` on :root picks
+   the half, so a second theme is not a second copy of every colour (ADR-0011). The
+   Paramètres page sets data-theme; "Système" lets the OS choose. */
+
+:root { color-scheme: light dark }
+:root[data-theme='light'] { color-scheme: light }
+:root[data-theme='dark'] { color-scheme: dark }
+
+:root {
+  /* ── Surfaces (tinted toward the accent hue, never #fff) ───────────── */
+  --canvas: light-dark(oklch(97.2% 0.008 155), oklch(17% 0.012 155));
+  --surface: light-dark(oklch(99.5% 0.004 155), oklch(21.5% 0.013 155));
+  --chrome: light-dark(oklch(98.8% 0.012 155), oklch(19.5% 0.014 155));
+  --sunken: light-dark(oklch(95.4% 0.01 155), oklch(25% 0.013 155));
+
+  /* ── Lines ─────────────────────────────────────────────────────────── */
+  --border: light-dark(oklch(90% 0.014 155), oklch(30% 0.015 155));
+  --border-strong: light-dark(oklch(83.5% 0.017 155), oklch(38% 0.017 155));
+  --border-field: light-dark(oklch(62% 0.018 155), oklch(56% 0.018 155));
+
+  /* ── Text ──────────────────────────────────────────────────────────── */
+  --text: light-dark(oklch(25% 0.02 155), oklch(93% 0.01 155));
+  --text-muted: light-dark(oklch(46% 0.018 155), oklch(73% 0.016 155));
+
+  /* ── Accent & semantics ────────────────────────────────────────────── */
+  --accent: light-dark(oklch(50% 0.12 157), oklch(78% 0.15 157));
+  --accent-hover: light-dark(oklch(43% 0.105 157), oklch(84% 0.14 157));
+  --accent-soft: light-dark(oklch(94% 0.06 157), oklch(28% 0.06 157));
+  --accent-soft-hover: light-dark(oklch(91% 0.085 157), oklch(32% 0.075 157));
+  --accent-border: light-dark(oklch(84% 0.12 157), oklch(44% 0.1 157));
+  --accent-ring: light-dark(oklch(58% 0.13 157), oklch(72% 0.15 157));
+  --on-accent: light-dark(oklch(99% 0.01 157), oklch(17% 0.02 157));
+  --danger: light-dark(oklch(52% 0.19 27), oklch(72% 0.17 27));
+  --danger-soft: light-dark(oklch(94.5% 0.035 27), oklch(28% 0.08 27));
+  --warn: light-dark(oklch(51% 0.11 70), oklch(82% 0.15 75));
+  --warn-soft: light-dark(oklch(95% 0.06 75), oklch(28% 0.06 70));
+  --warn-border: light-dark(oklch(85% 0.11 75), oklch(44% 0.09 70));
+
+  /* Compositing layers: the shimmer sweep and the modal scrim. */
+  --shimmer: light-dark(oklch(99.5% 0.002 155 / 0.9), oklch(32% 0.006 155 / 0.6));
+  --overlay: light-dark(oklch(26% 0.02 155 / 0.32), oklch(5% 0.01 155 / 0.6));
+
+  /* ── Geometry & elevation ──────────────────────────────────────────── */
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-pill: 999px;
+  --shadow: 0 1px 2px light-dark(oklch(26% 0.02 155 / 0.06), oklch(0% 0 0 / 0.4));
+  --shadow-md: 0 4px 16px light-dark(oklch(26% 0.02 155 / 0.1), oklch(0% 0 0 / 0.5));
+  --shadow-lg: 0 16px 48px light-dark(oklch(26% 0.02 155 / 0.16), oklch(0% 0 0 / 0.6));
+
+  --header-h: 56px;
+  --aside-w: 264px;
+
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 160ms;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0 }
+
+body {
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers are compared down a column, so they must align. */
+.tnum, .card-price, .filter-count, .page-btn, .results-meta strong { font-variant-numeric: tabular-nums }
+
+:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: 2px; border-radius: var(--radius-sm) }
+
+.icon { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round }
+.icon-sm { width: 13px; height: 13px }
+.icon-lg { width: 20px; height: 20px }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.skip-link {
+  position: absolute; top: 8px; left: 8px; z-index: 400;
+  transform: translateY(-200%);
+  background: var(--surface); color: var(--accent);
+  border: 1px solid var(--accent); border-radius: var(--radius-sm);
+  padding: 8px 14px; font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.skip-link:focus { transform: translateY(0) }
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+header {
+  background: var(--chrome);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  min-height: var(--header-h);
+  display: flex; align-items: center; gap: 12px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-shrink: 0; letter-spacing: -0.01em }
+.logo .icon { color: var(--accent) }
+.header-spacer { flex: 1 }
+#statusText { font-size: 12px; color: var(--text-muted); text-align: right }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 32px; padding: 0 12px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-field);
+  background: var(--surface); color: var(--text);
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer; user-select: none; white-space: nowrap;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.btn:hover { background: var(--sunken) }
+.btn:active { background: var(--border) }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; background: var(--sunken) }
+
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent) }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover) }
+.btn-primary:active { background: var(--accent-hover) }
+.btn-primary:disabled { background: var(--accent); border-color: var(--accent) }
+
+.btn-watch-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-hover); font-weight: 600 }
+.btn-watch-on:hover { background: var(--accent-soft-hover) }
+.btn-block { width: 100% }
+
+.btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; flex-shrink: 0;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: none; color: var(--text-muted); cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.btn-icon:hover { background: var(--sunken); color: var(--text) }
+.btn-icon.is-danger:hover { background: var(--danger-soft); color: var(--danger) }
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+.layout { display: flex; flex: 1; min-height: 0 }
+aside {
+  width: var(--aside-w); flex-shrink: 0;
+  background: var(--chrome); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  height: calc(100vh - var(--header-h)); position: sticky; top: var(--header-h);
+}
+aside h2 {
+  padding: 16px 16px 8px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+}
+#filterList { flex: 1; overflow-y: auto; padding: 0 8px }
+.aside-footer { padding: 8px 12px 12px; border-top: 1px solid var(--border) }
+.nav-link {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; margin-bottom: 8px;
+  padding: 0 10px; border: 0; border-radius: var(--radius-sm); background: transparent;
+  color: var(--text-muted); font: inherit; text-align: left; cursor: pointer;
+}
+.nav-link:hover, .nav-link[aria-current='page'] { background: var(--sunken); color: var(--text) }
+
+/* ── Paramètres ─────────────────────────────────────────────────────────── */
+.settings-page { padding: 24px 20px; max-width: 720px }
+.settings-page h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px }
+.settings-section { font-size: 13px; font-weight: 600; margin: 24px 0 4px }
+.settings-hint { color: var(--text-muted); margin-bottom: 12px }
+.theme-options { border: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px }
+.theme-option {
+  display: flex; flex-direction: column; gap: 8px; padding: 10px; cursor: pointer;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+}
+.theme-option input { position: absolute; opacity: 0; pointer-events: none }
+.theme-option:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) }
+.theme-option:has(input:focus-visible) { outline: 2px solid var(--accent-ring); outline-offset: 2px }
+.theme-name { font-weight: 600 }
+.theme-name small { display: block; font-weight: 400; color: var(--text-muted) }
+/* A miniature drawn with the theme's own tokens: color-scheme on the box flips them. */
+.theme-preview {
+  height: 64px; padding: 8px; display: grid; gap: 5px; align-content: start;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--canvas);
+}
+.theme-preview.is-light { color-scheme: light }
+.theme-preview.is-dark { color-scheme: dark }
+.theme-preview.is-split { grid-template-columns: 1fr 1fr; padding: 0; gap: 0; overflow: hidden }
+.theme-preview.is-split > .theme-preview { border: 0; border-radius: 0; height: 100% }
+.preview-line { display: block; height: 8px; border-radius: var(--radius-pill); background: var(--border-strong) }
+.preview-line.is-title { width: 60%; background: var(--text) }
+.preview-line.is-accent { width: 35%; background: var(--accent) }
+.settings-back { margin-top: 24px }
+
+/* ── Filter list ────────────────────────────────────────────────────────── */
+.filter-row { display: flex; align-items: center; gap: 2px }
+/* Row actions stay in flow (no layout shift) and are revealed by hover *or*
+   focus — a keyboard user never meets a hover-only control. */
+.filter-actions { opacity: 0; transition: opacity var(--dur) var(--ease) }
+.filter-row:hover .filter-actions,
+.filter-row:focus-within .filter-actions { opacity: 1 }
+@media (hover: none) { .filter-actions { opacity: 1 } }
+
+.filter-item {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 8px 8px 10px; margin-bottom: 2px;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+.filter-item:hover { background: var(--sunken) }
+.filter-item.active { background: var(--accent-soft); border-color: var(--accent-border) }
+.filter-item.active .filter-name { color: var(--accent-hover) }
+.filter-name-row { display: flex; align-items: center; gap: 6px; width: 100% }
+.filter-name { font-size: 13px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.filter-meta { font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.filter-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0 }
+.filter-dot.off { background: var(--border-strong) }
+.filter-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 18px; padding: 0 6px;
+  border-radius: var(--radius-pill); font-size: 11px; font-weight: 600; line-height: 1;
+  background: var(--sunken); border: 1px solid var(--border); color: var(--text-muted);
+  margin-left: auto; flex-shrink: 0;
+}
+.filter-count.has-results { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent-hover) }
+.filter-actions { display: flex; gap: 2px; flex-shrink: 0 }
+.aside-empty { padding: 16px 10px; color: var(--text-muted); font-size: 12px }
+
+/* ── Main ───────────────────────────────────────────────────────────────── */
+main { flex: 1; min-width: 0; display: flex; flex-direction: column }
+.main-toolbar { padding: 16px 20px 0; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap }
+.results-meta { font-size: 13px; color: var(--text-muted); flex: 1 }
+.results-meta strong { color: var(--text); font-weight: 600 }
+/* « · page 2 sur 3 » never breaks away from the count onto a line of its own (W26). */
+.results-page { white-space: nowrap }
+#lastUpdated { font-size: 11px; color: var(--text-muted) }
+.sort-control { display: flex; align-items: center; gap: 6px }
+.sort-label { font-size: 12px; color: var(--text-muted) }
+.sort-select {
+  background: var(--surface); border: 1px solid var(--border-field);
+  border-radius: var(--radius-sm); color: var(--text);
+  padding: 5px 8px; font-family: inherit; font-size: 12px;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.sort-select:hover { border-color: var(--text-muted) }
+.sort-select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft) }
+/* Multi-column on wide screens: scanning 25 listings beats stretching one card
+   across 1400px. minmax keeps the facts line on one line. */
+.cards {
+  padding: 12px 20px 24px; display: grid; gap: 8px; align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* ── Loading & empty states ─────────────────────────────────────────────── */
+.skeleton-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sk-line { height: 10px; border-radius: var(--radius-pill); background: var(--sunken); position: relative; overflow: hidden }
+.sk-line::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, var(--shimmer), transparent);
+  animation: shimmer 1.4s var(--ease) infinite;
+}
+@keyframes shimmer { from { transform: translateX(-100%) } to { transform: translateX(100%) } }
+.sk-title { width: 62%; height: 13px }
+.sk-price { width: 26%; height: 18px }
+.sk-meta { width: 44% }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; flex: 1; padding: 56px 20px; text-align: center; color: var(--text-muted);
+}
+.empty .icon { width: 28px; height: 28px; color: var(--border-strong); margin-bottom: 4px }
+.empty-title { font-size: 14px; font-weight: 600; color: var(--text) }
+.empty p { max-width: 46ch; font-size: 13px }
+.empty .btn { margin-top: 8px }
+
+/* ── Source pills: neutral, the state reads from the shape (ticket 04) ──────
+   A portal earns no hue: the first colour on the page must be "new", not a brand.
+   Pressed = filled with a strong border, released = outline with muted text, so
+   the state never rests on intensity alone (W9). */
+.source-filter-bar { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 0 }
+.source-pill {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 10px;
+  border-radius: var(--radius-pill); border: 1px solid var(--border);
+  background: transparent; color: var(--text-muted);
+  font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  cursor: pointer; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.source-pill[aria-pressed='true'] { background: var(--sunken); border-color: var(--border-strong); color: var(--text) }
+.source-pill:hover { border-color: var(--text-muted) }
+.source-pill .pill-count { font-weight: 500; letter-spacing: 0; font-variant-numeric: tabular-nums }
+
+/* ── Listing card: one decision line per home (ticket 06) ─────────────── */
+.card {
+  display: grid; gap: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px; position: relative;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+/* The hover promises a click, and the whole card keeps it (W13). */
+.card:hover { border-color: var(--border-strong); box-shadow: var(--shadow) }
+.card:focus-within { border-color: var(--accent-ring) }
+/* "New" earns the accent and nothing else: no tinted fill, no pulse (ticket 04). */
+.card.is-new { border-color: var(--accent) }
+.card-new-badge {
+  background: var(--accent); color: var(--on-accent);
+  font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-pill);
+}
+.card-top { display: flex; align-items: baseline; gap: 8px; min-width: 0 }
+.card-price { font-size: 20px; font-weight: 600; letter-spacing: -0.01em }
+.card-price-unit { font-size: 12px; color: var(--text-muted) }
+.card-city { margin-left: auto; font-size: 14px; font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0 }
+.card-facts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 14px; font-weight: 500 }
+.card-money, .card-note { font-size: 12px; color: var(--text-muted) }
+/* Position vs the Carte des loyers: weight, never hue, marks « hors fourchette ». */
+.card-position { font-size: 12px; color: var(--text); font-variant-numeric: tabular-nums }
+.card-position.is-outside { font-weight: 600 }
+.rent-credit { padding: 4px 20px 16px; font-size: 11px; color: var(--text-muted) }
+/* An unsettled total must not read like a settled one. */
+.is-uncertain { color: var(--warn); font-weight: 600 }
+.card-title-row { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.card-title { color: var(--text); text-decoration: none }
+/* Stretched over the card: the title is the link, the card is its target. */
+.card-title::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius) }
+.card:hover .card-title { text-decoration: underline; text-underline-offset: 2px }
+.card-meta { font-size: 11px; color: var(--text-muted) }
+.card-meta .is-estimated { font-style: italic }
+
+/* Regulatory notice (passoire thermique): it qualifies the listing itself. */
+.card-warning {
+  display: flex; align-items: center; gap: 6px; margin-top: 2px;
+  background: var(--warn-soft); border: 1px solid var(--warn-border);
+  border-radius: var(--radius-sm); padding: 4px 8px;
+  font-size: 12px; font-weight: 500; color: var(--warn);
+}
+.card-warning .icon { color: var(--warn); flex-shrink: 0 }
+
+/* A listing whose source stopped answering may be gone: a doubt, so neutral. */
+.card-source-down { font-size: 12px; font-style: italic; color: var(--text-muted) }
+
+/* While a search runs: one tag per source, neutral; a failure reads by its word. */
+.search-progress { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 20px 0 }
+.search-source {
+  font-size: 12px; color: var(--text-muted); padding: 2px 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface);
+}
+.search-source.is-found { color: var(--text) }
+.search-source.is-failed { color: var(--text); font-weight: 600; border-color: var(--border-strong) }
+
+/* Listings the page hides because their source is down: said once, above the cards. */
+.results-notice { padding: 6px 20px 0; font-size: 13px; color: var(--text-muted) }
+
+/* The same home, published elsewhere: each keeps its own link, above the card's. */
+.dup-link { position: relative; z-index: 1; color: var(--text); text-underline-offset: 2px }
+
+/* ── Plus de critères (ticket 16): a fold, never a hiding place — it opens by itself
+   when the filter uses one of them. */
+.more-criteria { margin: 4px 0 16px; border-top: 1px solid var(--border); padding-top: 12px }
+/* A list-item summary keeps the native disclosure triangle: the fold reads as a fold. */
+.more-criteria > summary {
+  cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); padding: 6px 0;
+}
+.more-criteria > .form-row, .more-criteria > .form-group { margin-top: 12px }
+
+/* ── Écarter (ticket 05) ────────────────────────────────────────────────
+   The trigger is tertiary and sits above the stretched title link: a dismissal must
+   never open the listing it is rejecting. */
+.card:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: 2px }
+.card-dismiss {
+  position: relative; z-index: 1; flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 8px;
+  border: 1px solid transparent; border-radius: var(--radius-sm); background: none;
+  color: var(--text-muted); font: inherit; font-size: 12px; cursor: pointer;
+}
+.card-dismiss:hover { background: var(--sunken); color: var(--text) }
+
+/* One reason bar for the page: it never reshapes the card it is about. */
+.reason-bar {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 250;
+  width: min(760px, calc(100vw - 24px)); padding: 12px 14px; display: grid; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+.reason-bar[hidden] { display: none }
+.reason-title { font-size: 13px; font-weight: 600 }
+.reason-chips { display: flex; flex-wrap: wrap; gap: 6px }
+.reason-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px;
+  border: 1px solid var(--border-field); border-radius: var(--radius-pill);
+  background: var(--surface); color: var(--text); font: inherit; font-size: 12px; cursor: pointer;
+}
+.reason-chip:hover { background: var(--sunken) }
+.reason-bar kbd {
+  font: 11px ui-monospace, monospace; padding: 0 4px; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--sunken); color: var(--text-muted);
+}
+.reason-hint { font-size: 11px; color: var(--text-muted) }
+.reason-other { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.reason-other label { font-size: 12px; color: var(--text-muted) }
+.reason-other input {
+  flex: 1; min-width: 180px; min-height: 32px; padding: 0 8px; font: inherit;
+  border: 1px solid var(--border-field); border-radius: var(--radius-sm); background: var(--surface); color: var(--text);
+}
+.toast-action {
+  border: 0; background: none; color: inherit; font: inherit; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.dismissed-list { list-style: none; display: grid; gap: 6px; margin-bottom: 12px }
+.dismissed-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface);
+}
+.dismissed-row small { color: var(--text-muted) }
+/* The home key stores the commune folded to lower case; the page gives it back its capital. */
+.dismissed-city { text-transform: capitalize }
+
+/* ── Carte (ticket 14) ──────────────────────────────────────────────────
+   Neutral ink throughout: a commune pin is a count, not a status, so it spends no hue
+   (colour budget). An excluded commune reads by its shape: hollow, crossed. */
+.view-switch { display: inline-flex; border: 1px solid var(--border-field); border-radius: var(--radius-sm); overflow: hidden }
+.view-switch button {
+  min-height: 28px; padding: 0 12px; border: 0; background: var(--surface);
+  color: var(--text-muted); font: inherit; font-size: 12px; cursor: pointer;
+}
+.view-switch button[aria-pressed='true'] { background: var(--sunken); color: var(--text); font-weight: 600 }
+.map-view { padding: 12px 20px 24px }
+.map-canvas {
+  width: 100%; height: calc(100vh - 240px); min-height: 320px; overflow: hidden;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--sunken);
+}
+.map-canvas.is-compact { height: 360px; min-height: 0 }
+.filter-map { margin-top: 4px }
+.map-note { margin-top: 6px; font-size: 11px; color: var(--text-muted) }
+.map-unavailable { padding: 24px; font-size: 13px; color: var(--text-muted) }
+.map-pin {
+  min-width: 32px; height: 32px; padding: 0 9px; border-radius: var(--radius-pill);
+  border: 2px solid var(--surface); background: var(--text); color: var(--canvas);
+  font: 600 13px/1 var(--font); cursor: pointer; box-shadow: var(--shadow-md);
+}
+/* A dot, not a label: the tiles already print the town names it would cover. The
+   button is a 28px tap area around a 14px dot, so neighbours stay apart. */
+.map-commune {
+  width: 28px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer;
+  display: grid; place-items: center;
+}
+.map-commune::before {
+  content: ''; width: 14px; height: 14px; border-radius: 50%; box-sizing: border-box;
+  border: 2px solid var(--surface); background: var(--text-muted); box-shadow: var(--shadow-md);
+  grid-area: 1 / 1;
+}
+/* Excluded reads by shape, not hue alone: a hollow ring struck through. */
+.map-commune.is-excluded::before { background: var(--surface); border-color: var(--text) }
+.map-commune.is-excluded::after {
+  content: ''; width: 2px; height: 16px; background: var(--text); transform: rotate(45deg);
+  grid-area: 1 / 1;
+}
+.map-detail { font: 13px/1.4 var(--font); color: var(--text); display: grid; gap: 8px }
+.map-detail-title { font-weight: 600; padding-right: 32px }
+.map-detail-meta { margin-top: -6px; font-size: 12px; color: var(--text-muted) }
+.map-detail-list { list-style: none; display: grid; gap: 4px; max-height: 240px; overflow-y: auto }
+.map-detail-list li { display: flex; align-items: center; gap: 6px }
+.map-detail-list li .card-dismiss { margin-left: auto }
+.map-detail-list a { color: var(--text) }
+/* The library's popup is white by default, and its stylesheet loads after this one:
+   scoped under .map-canvas so the theme's surface wins at any load order. */
+.map-canvas .maplibregl-popup-content {
+  background: var(--surface); color: var(--text); border-radius: var(--radius); box-shadow: var(--shadow-md);
+  padding: 12px 14px;
+}
+/* The library's close cross is 14px, glued to the corner and to the title: a real
+   button here, aligned with the title row, its hit area wide enough for a thumb. */
+.map-canvas .maplibregl-popup-close-button {
+  top: 6px; right: 6px; width: 32px; height: 32px; display: grid; place-items: center;
+  border-radius: var(--radius-sm); font: 400 20px/1 var(--font); color: var(--text-muted);
+}
+.map-canvas .maplibregl-popup-close-button:hover { background: var(--sunken); color: var(--text) }
+.map-canvas .maplibregl-ctrl-attrib { background: var(--surface); color: var(--text-muted) }
+.map-canvas .maplibregl-ctrl-attrib a { color: var(--text-muted) }
+.map-canvas .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--surface) }
+.map-canvas .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--surface) }
+
+/* ── DPE / GES (regulatory green→red order, restated as readable chips) ──── */
+.dpe-A { --dpe-h: 148 }
+.dpe-B { --dpe-h: 135 }
+.dpe-C { --dpe-h: 110 }
+.dpe-D { --dpe-h: 95 }
+.dpe-E { --dpe-h: 70 }
+.dpe-F { --dpe-h: 45 }
+.dpe-G { --dpe-h: 25 }
+.dpe-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+  /* Dark keeps the label's reading: a bright chip with a dark letter. */
+  background: light-dark(oklch(88% 0.13 var(--dpe-h)), oklch(80% 0.15 var(--dpe-h)));
+  color: light-dark(oklch(32% 0.1 var(--dpe-h)), oklch(20% 0.07 var(--dpe-h)));
+}
+.dpe-na { background: var(--sunken); color: var(--text-muted); border: 1px solid var(--border) }
+.energy-pair { display: inline-flex; align-items: center; gap: 4px }
+.energy-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.04em }
+
+/* ── Pagination ─────────────────────────────────────────────────────────── */
+.pagination { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-items: center; padding: 8px 20px 24px }
+.page-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  min-width: 32px; height: 32px; padding: 0 10px;
+  border: 1px solid var(--border-field); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text);
+  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.page-btn:hover:not(:disabled):not([aria-current]) { background: var(--sunken) }
+.page-btn[aria-current] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600 }
+.page-btn:disabled { opacity: 0.45; cursor: not-allowed }
+.page-gap { min-width: 20px; text-align: center; color: var(--text-muted) }
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 20px; right: 20px; z-index: 200;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--text); color: var(--surface);
+  padding: 10px 16px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md);
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.toast.show { opacity: 1; transform: none; pointer-events: auto }  /* its "Annuler" must be reachable */
+
+/* ── Modal ──────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: var(--overlay);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 540px; max-height: min(90vh, 760px);
+  display: flex; flex-direction: column;
+  animation: modal-in 180ms var(--ease);
+}
+@keyframes modal-in { from { opacity: 0; transform: translateY(8px) scale(0.99) } to { opacity: 1; transform: none } }
+.modal-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border) }
+.modal-title { font-size: 14px; font-weight: 600; flex: 1 }
+.modal-body { padding: 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--chrome); border-radius: 0 0 var(--radius) var(--radius) }
+.fieldset { border: none; display: flex; flex-direction: column; gap: 12px }
+.fieldset > legend {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); padding: 0 0 8px; width: 100%; border-bottom: 1px solid var(--border);
+}
+
+/* ── Forms ──────────────────────────────────────────────────────────────── */
+.form-group { display: flex; flex-direction: column; gap: 5px }
+.form-group > label, .form-group-label { font-size: 12px; font-weight: 500; color: var(--text) }
+.required { color: var(--danger) }
+.form-input {
+  background: var(--surface); border: 1px solid var(--border-field);
+  border-radius: var(--radius-sm); color: var(--text);
+  padding: 7px 10px; font-family: inherit; font-size: 13px; width: 100%;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.form-input::placeholder { color: var(--text-muted) }
+.form-input:hover { border-color: var(--text-muted) }
+.form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft) }
+.form-input[aria-invalid='true'] { border-color: var(--danger); background: var(--danger-soft) }
+.form-hint { font-size: 11px; color: var(--text-muted) }
+.form-error { font-size: 12px; font-weight: 500; color: var(--danger); display: none; align-items: center; gap: 4px }
+.form-error.show { display: flex }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+
+.radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 6px }
+.radio-label, .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; min-height: 24px }
+input[type='radio'], input[type='checkbox'] { accent-color: var(--accent); cursor: pointer; width: 15px; height: 15px; margin: 0 }
+
+.dpe-checkboxes { display: flex; gap: 4px; flex-wrap: wrap }
+.dpe-cb-label {
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+  padding: 4px 8px 4px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.dpe-cb-label:hover { border-color: var(--border-strong) }
+.dpe-cb-label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft) }
+
+/* ── Responsive: structural, not fluid ──────────────────────────────────── */
+@media (max-width: 900px) {
+  .layout { flex-direction: column }
+  aside {
+    width: 100%; height: auto; position: static;
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  aside h2 { padding: 12px 16px 6px }
+  #filterList { display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 10px }
+  .filter-item { width: auto; min-width: 180px; flex-shrink: 0; border-color: var(--border) }
+  .aside-footer { border-top: none; padding: 0 12px 12px }
+  .main-toolbar, .source-filter-bar, .cards, .pagination, .rent-credit { padding-left: 12px; padding-right: 12px }
+}
+@media (max-width: 560px) {
+  header { flex-wrap: wrap; padding: 8px 12px; gap: 8px }
+  .header-spacer { display: none }
+  /* Logo takes its own row so both actions sit side by side underneath. */
+  .logo { flex-basis: 100% }
+  header .btn { flex: 1 }
+  #statusText { order: 3; flex-basis: 100%; text-align: left }
+  /* The count takes its own row; the order and the view switch share the next one. */
+  .results-meta { flex-basis: 100% }
+  .form-row { grid-template-columns: 1fr }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important }
+}
