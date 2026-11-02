@@ -125,6 +125,11 @@ Dense scale: 4 · 6 · 8 · 12 · 16 · 20 · 24 · 32. Header 56px, sidebar 264
 Radius: 6 (controls) · 10 (cards, modal) · 999 (chips). Elevation is one soft
 shadow at `oklch(26% 0.02 155 / 0.06)`; cards separate by border, not shadow.
 
+The cards pack as a masonry: each takes the end of the shortest column, in sort order,
+so a short card leaves no hole under it and the reading order stays the sort order.
+Placement only, never motion: a resize re-packs without a transition. Without the
+script, the plain grid. Held by `test_the_card_masonry_keeps_the_reading_order`.
+
 Structural responsive behaviour, not fluid type: below 900px the sidebar becomes
 a horizontal filter strip above the results and the layout scrolls as one column.
 

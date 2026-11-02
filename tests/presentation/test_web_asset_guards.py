@@ -263,3 +263,23 @@ def test_the_advertiser_kinds_are_the_domain_ones() -> None:
 def test_the_rent_map_credit_names_the_source_as_the_domain_does() -> None:
     # Act & Assert — Licence Ouverte: the web line must carry the same credit (ADR-0010)
     assert RENT_MAP_CREDIT[1:] in _APP_JS
+
+
+def test_the_card_masonry_keeps_the_reading_order() -> None:
+    """Cards are packed as a masonry by auto-placement, in DOM order.
+
+    `dense` placement would fill a hole with a later card: the sort order would no
+    longer be the reading order, and j/k would jump around the page.
+    """
+    # Arrange
+    styles = (_ASSETS / "styles.css").read_text(encoding="utf-8")
+
+    # Act
+    dense = re.findall(r"grid-auto-flow\s*:[^;}]*dense", styles) + re.findall(
+        r"gridAutoFlow[^;\n]*dense", _APP_JS
+    )
+
+    # Assert
+    assert ".cards.is-masonry" in styles
+    assert "MASONRY: 'is-masonry'" in _APP_JS
+    assert not dense, "un placement `dense` réordonnerait les cartes"

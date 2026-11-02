@@ -140,6 +140,7 @@ const CSS = Object.freeze({
   HAS_RESULTS: 'has-results',
   FILTER_COUNT: 'filter-count',
   DPE_UNKNOWN: 'dpe-na',
+  MASONRY: 'is-masonry',
 });
 
 // What the main area shows. Background refreshes only redraw the listings view.
@@ -550,6 +551,28 @@ function applyListings(data, highlightNew) {
     const plural = newIds.size > 1 ? 's' : '';
     showToast(`${newIds.size} annonce${plural} détectée${plural}`);
   }
+}
+
+// One observer for the cards on screen: a card's height changes with the column
+// width, when its « Nouveau » badge goes, when the fonts arrive. Setting its span never
+// changes its height (cards align to the start of their area), so it cannot loop.
+const masonryObserver = new ResizeObserver(entries => {
+  for (const { target } of entries) spanMasonryCard(target);
+});
+let masonryGap = 0;
+
+function arrangeMasonry() {
+  masonryObserver.disconnect();
+  const list = document.querySelector('.cards:not([aria-hidden])');
+  if (!list) return;
+  // The gap stays in the stylesheet; the rows become 1px, so a card spans gap + height.
+  masonryGap = parseFloat(getComputedStyle(list).rowGap) || 0;
+  list.classList.add(CSS.MASONRY);
+  for (const card of list.children) masonryObserver.observe(card);
+}
+
+function spanMasonryCard(card) {
+  card.style.gridRowEnd = `span ${Math.ceil(card.getBoundingClientRect().height + masonryGap)}`;
 }
 
 function sortControlHtml() {
@@ -1490,6 +1513,7 @@ function renderMain(html) {
   const main = el(EL.MAIN);
   main.innerHTML = html;
   main.setAttribute('aria-busy', 'false');
+  arrangeMasonry();
 }
 
 function setStatus(message) {

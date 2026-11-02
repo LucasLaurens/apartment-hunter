@@ -249,6 +249,12 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column }
   padding: 12px 20px 24px; display: grid; gap: 8px; align-items: start;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
+/* Masonry, set by the script: 1px rows, each card spanning its own height plus one
+   gap, so a short card leaves no hole under it. Placement stays sparse: each card
+   takes the end of the shortest column, in DOM order, so the sort order is still the
+   reading order and j/k still walk it. Never `dense`, which would pull a later home
+   ahead of an earlier one. Without the script, the plain grid above. */
+.cards.is-masonry { grid-auto-rows: 1px; row-gap: 0 }
 
 /* ── Loading & empty states ─────────────────────────────────────────────── */
 .skeleton-card {
