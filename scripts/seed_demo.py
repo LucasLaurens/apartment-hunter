@@ -1,4 +1,4 @@
-"""Fill a demo database with fictitious homes in and around Paris, to try the app without crawling.
+"""Fill a demo database with fictitious homes around Annecy, to try the app without crawling.
 
     uv run python scripts/seed_demo.py demo.db
     DATABASE_URL=demo.db uv run hunt serve
@@ -32,37 +32,32 @@ from apartment_hunter.domain.value_objects import (
 from apartment_hunter.infrastructure.crawlers.base_crawler import build_listing_id
 from apartment_hunter.infrastructure.storage.sqlite_repository import SqliteRepository
 
-_SEED: Final = 75000
+_SEED: Final = 74000
 _LISTING_COUNT: Final = 36
 _FILTER_ID: Final = "demo"
-# Paris and the inner suburbs, Paris most often. Like most sources, a demo listing names
-# its commune only: the map pins it at the commune, one pin per commune. Rent references
-# load for the filter cities' departments only, hence one filter city per department.
-_FILTER_CITIES: Final = ["Paris", "Boulogne-Billancourt", "Pantin", "Vincennes"]
-_SUBURBS: Final = (
-    "Boulogne-Billancourt",
-    "Issy-les-Moulineaux",
-    "Levallois-Perret",
-    "Montreuil",
-    "Vincennes",
-    "Saint-Mandé",
-    "Ivry-sur-Seine",
+# Communes within 20 km of Annecy, Annecy twice as often. Like most sources, a demo
+# listing names its commune only: the map pins it at the commune, one pin per commune.
+_COMMUNES: Final = (
+    "Annecy",
+    "Annecy",
+    "Sevrier",
+    "Veyrier-du-Lac",
+    "Argonay",
+    "Poisy",
+    "Épagny Metz-Tessy",
+    "Sillingy",
+    "Saint-Jorioz",
+    "Talloires-Montmin",
+    "Villaz",
 )
-_PARIS_SHARE: Final = 0.6
-# A Paris home carries its arrondissement's postal code: the rent map has no row for
-# Paris as a whole, only one per arrondissement.
-_PARIS_ARRONDISSEMENTS: Final = (3, 5, 9, 10, 11, 11, 12, 13, 14, 15, 15, 17, 18, 19, 20)
-# €/m² per month, drawn per listing: Paris above its suburbs, as on the Carte des loyers.
-_PARIS_RENT_PER_M2: Final = (27, 38)
-_SUBURB_RENT_PER_M2: Final = (20, 29)
 _SOURCES: Final = ("orpi", "foncia", "century21", "laforet", "paruvendu", "squarehabitat")
 # Each network's ads carry one of its own branches; ParuVendu is mostly private owners.
 _AGENCIES: Final = {
-    "orpi": "Orpi Paris Bastille",
-    "foncia": "Foncia Paris Nation",
-    "century21": "Century 21 Saint-Ambroise",
-    "laforet": "Laforêt Paris 15",
-    "squarehabitat": "Square Habitat Paris Est",
+    "orpi": "Orpi Annecy Centre",
+    "foncia": "Foncia Lac",
+    "century21": "Century 21 Lac Bleu",
+    "laforet": "Laforêt Annecy",
+    "squarehabitat": "Square Habitat Annecy",
 }
 # Faker draws a dict's keys weighted by their values: mostly C and D, as in the area.
 _DPE_WEIGHTS: Final = OrderedDict(
@@ -71,16 +66,13 @@ _DPE_WEIGHTS: Final = OrderedDict(
 
 
 def build_demo_listings(fake: Faker, now: datetime) -> list[Listing]:
-    """Fictitious but plausible homes: rents by size and place, scattered over the radius."""
+    """Fictitious but plausible homes: rents by size, scattered over the radius."""
     listings: list[Listing] = []
     for index in range(_LISTING_COUNT):
-        in_paris = fake.random.random() < _PARIS_SHARE
-        city = "Paris" if in_paris else fake.random_element(_SUBURBS)
-        postal_code = f"750{fake.random_element(_PARIS_ARRONDISSEMENTS):02d}" if in_paris else None
-        rent_low, rent_high = _PARIS_RENT_PER_M2 if in_paris else _SUBURB_RENT_PER_M2
+        city = fake.random_element(_COMMUNES)
         rooms = fake.random_element((1, 1, 2, 2, 2, 3, 3, 4))
-        surface = fake.random_int(14, 26) + (rooms - 1) * fake.random_int(12, 19)
-        rent = Decimal(round(surface * fake.random_int(rent_low, rent_high) / 10) * 10)
+        surface = fake.random_int(18, 30) + (rooms - 1) * fake.random_int(14, 22)
+        rent = Decimal(round(surface * fake.random_int(15, 23) / 10) * 10)
         charges = Decimal(fake.random_element((0, 40, 60, 80, 110, 140)))
         source = fake.random_element(_SOURCES)
         url = f"https://example.org/annonce/{source}/{fake.uuid4()}"
@@ -91,7 +83,7 @@ def build_demo_listings(fake: Faker, now: datetime) -> list[Listing]:
                 url=url,
                 title=f"Appartement {rooms} pièce{'s' if rooms > 1 else ''} {surface} m²",
                 source=source,
-                location=Location(city=city, postal_code=postal_code),
+                location=Location(city=city),
                 price=Price(amount=rent, charges=charges or None),
                 published_at=published,
                 published_at_source=(
@@ -125,18 +117,18 @@ async def seed(path: str) -> None:
     finally:
         # An open connection keeps its thread alive: an error would hang instead of exit.
         await repository.close()
-    print(f"{_LISTING_COUNT} fictitious listings in {path}, filter « Paris et proche banlieue ».")
+    print(f"{_LISTING_COUNT} fictitious listings in {path}, filter « Autour d'Annecy ».")
 
 
 async def _fill(repository: SqliteRepository, fake: Faker, now: datetime) -> None:
     await repository.save_filter(
         SearchFilter(
             id=_FILTER_ID,
-            name="Paris et proche banlieue",
-            cities=_FILTER_CITIES,
-            radius_km=10,
-            max_price=2000,
-            min_surface_m2=20,
+            name="Autour d'Annecy",
+            cities=["Annecy"],
+            radius_km=20,
+            max_price=1400,
+            min_surface_m2=25,
         )
     )
     listings = build_demo_listings(fake, now)

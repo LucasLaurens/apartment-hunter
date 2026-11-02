@@ -49,7 +49,7 @@ chaque commit (ruff, format, mypy strict, tests).
 
 ### Essayer sans rien crawler
 
-Une base de démonstration, remplie d'annonces fictives à Paris et en proche banlieue :
+Une base de démonstration, remplie d'annonces fictives autour d'Annecy :
 
 ```bash
 uv run python scripts/seed_demo.py demo.db
@@ -104,6 +104,15 @@ uv run hunt watch               # recrawle à la cadence du filtre, alerte des n
 Ou **Surveiller** dans l'interface. Deux cadences par filtre : la recherche (30 min par
 défaut, 5 au minimum) et l'alerte (15 min).
 
+### 5. Règles des sites (à vos risques)
+
+Par défaut, l'outil respecte le `robots.txt` et les conditions d'utilisation de chaque
+site. Dans **Paramètres**, ou avec `hunt rules ignore`, vous pouvez les ignorer : cela
+rouvre Bien'ici, Locservice, FNAIM, 2A Immobilier, SBM Immobilier et les pages que
+`robots.txt` ferme. Ces sites interdisent l'extraction de leurs annonces : **vous en êtes
+seul responsable**. Les protections anti-bot, elles, ne sont jamais contournées
+([ADR-0012](docs/decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)).
+
 ---
 
 ## Sources
@@ -128,33 +137,6 @@ défaut, 5 au minimum) et l'alerte (15 min).
 Sources retirées : **SeLoger** (ne passait DataDome qu'en masquant l'automatisation), **Figaro Immo** et **EntreParticuliers** (Cloudflare refuse un client qui ne se fait pas passer pour Chrome), Jinka (login), **LeBonCoin** (captcha DataDome), **Logic-Immo** (SPA sans accès scraping pur). Détails : [Sources](docs/functional/sources.md).
 
 Le réglage **Règles des sites** (Paramètres, ou `hunt rules ignore`) rouvre à vos risques les sources refusées pour leur `robots.txt` ou leurs CGU ; les protections anti-bot restent respectées ([ADR-0012](docs/decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)).
-
----
-
-## Documentation
-
-### Fonctionnelle
-| Document | Description |
-|----------|-------------|
-| [Vue d'ensemble](docs/functional/overview.md) | Comment ça marche de bout en bout |
-| [Glossaire](docs/functional/glossaire.md) | Le vocabulaire du domaine, mot par mot, et les écarts connus |
-| [Filtres](docs/functional/filters.md) | Tous les critères de recherche expliqués |
-| [Notifications](docs/functional/notifications.md) | Terminal + signal in-app |
-| [Sources](docs/functional/sources.md) | Sites scrapés, données disponibles, limites |
-| [Recherche de sources, novembre 2026](docs/research/sources-2026-11.md) | 14 sites examinés au 2026-11-01 ; FNAIM et 2A Immobilier ont depuis rejoint les sources sous l'ADR-0012 |
-
-### Technique
-| Document | Description |
-|----------|-------------|
-| [Architecture](docs/technical/architecture.md) | Clean Architecture, couches, règle de dépendance |
-| [Crawlers](docs/technical/crawlers.md) | Fonctionnement interne, anti-bot, ajouter une source |
-| [Modèle de données](docs/technical/data-model.md) | Entités, value objects, schéma SQLite |
-| [Scheduler](docs/technical/scheduler.md) | Mode watch, boucle de polling, concurrence |
-| [Sécurité](docs/technical/security.md) | Credentials, rate limiting, robots.txt |
-| [Conventions de code](docs/technical/conventions.md) | Règles suivies par le code et la doc |
-| [Décisions (ADR)](docs/decisions/README.md) | Les arbitrages métier actés, et ce qu'ils interdisent |
-| [Design de l'interface](DESIGN.md) | Thème Clair / Sombre / Système, tokens OKLCH, composants, accessibilité |
-| [Produit](PRODUCT.md) | Utilisateur, objectif, principes qui justifient le design |
 
 ---
 
@@ -224,7 +206,7 @@ hunt rules honour                  # Les respecter de nouveau (défaut)
 | [Filtres](docs/functional/filters.md) | Tous les critères de recherche expliqués |
 | [Notifications](docs/functional/notifications.md) | Terminal + signal in-app |
 | [Sources](docs/functional/sources.md) | Sites scrapés, données disponibles, limites |
-| [Recherche de sources, novembre 2026](docs/research/sources-2026-11.md) | 14 sites examinés au 2026-11-01 |
+| [Recherche de sources, novembre 2026](docs/research/sources-2026-11.md) | 14 sites examinés au 2026-11-01 ; FNAIM et 2A Immobilier ont depuis rejoint les sources sous l'ADR-0012 |
 
 ### Technique
 | Document | Description |
@@ -277,8 +259,8 @@ lointaine.
 ### Plus de sources
 - **PAP**, dès que sa protection Cloudflare laisse passer un client honnête : le crawler
   est prêt, limité à ce que son `robots.txt` autorise (la page de la commune).
-- **Les agences locales indépendantes**, sur leurs propres sites, quand leurs conditions
-  d'utilisation le permettent.
+- **Les agences locales** que seule la FNAIM publie aujourd'hui (Agence BFM, Entre 2 Lacs,
+  Like My Home…), sur leurs propres sites.
 - **Les réseaux à faible volume** écartés pour l'instant (ERA, Capifrance, iad, Nestenn),
   si leur stock autour de la ville cherchée le justifie.
 - **Des accords** avec les portails qui refusent la collecte : c'est la seule voie propre
@@ -289,6 +271,8 @@ lointaine.
   distance au travail pourraient compter aussi.
 - **L'historique d'un logement** : baisses de loyer, republications, durée en ligne.
 - **Des alertes ailleurs que dans le terminal** (notification du système, e-mail), en option.
+- **Les charges partout** : la FNAIM affiche « charges ? » alors que sa page détail les
+  donne ; le chauffage collectif de SBM n'est pas encore repris.
 - **La Carte des loyers préchargée** au démarrage de `hunt serve`, plutôt qu'à la première
   recherche.
 
@@ -302,12 +286,3 @@ lointaine.
 ### Sous le capot
 - Un seul client HTTP (`httpx`) au lieu de deux, une horloge injectée partout, un plafond
   sur la taille des réponses, une CI durcie (actions épinglées, `uv sync --locked`).
-
----
-
-## Licence
-
-[MIT](LICENSE). Les skills de `.claude/skills/` reprises de
-[mattpocock/skills](https://github.com/mattpocock/skills) restent sous sa licence MIT
-([notice](.claude/skills/THIRD_PARTY_LICENSE)). Le code est libre ; les annonces collectées restent la propriété de leurs
-éditeurs, et chaque utilisateur répond de l'usage qu'il fait de l'outil.
