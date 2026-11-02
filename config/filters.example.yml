@@ -1,0 +1,44 @@
+filters:
+  - name: "Annecy région - 3p meublé"
+    cities:
+      - "Annecy"
+    radius_km: 30
+    excluded_cities:
+      - "Rumilly"
+      - "Aix-les-Bains"
+    min_price: 600
+    max_price: 1200
+    min_surface_m2: 45
+    max_surface_m2: 90
+    min_rooms: 2
+    max_rooms: 4
+    furnished: true
+    exclude_ground_floor: true
+    exclude_first_floor: false
+    top_floor_only: false
+    max_dpe_rating: "D"
+    charges_included: null          # null = indifferent
+    collective_heating: null        # null = indifferent
+    notification_interval_minutes: 15
+    enabled: true
+
+  - name: "Lyon centre - studio non meublé"
+    cities:
+      - "Lyon"
+    radius_km: 5
+    excluded_cities: []
+    min_price: 400
+    max_price: 800
+    min_surface_m2: 20
+    max_surface_m2: 40
+    min_rooms: 1
+    max_rooms: 2
+    furnished: false
+    exclude_ground_floor: true
+    exclude_first_floor: true
+    top_floor_only: false
+    max_dpe_rating: "C"
+    charges_included: true
+    collective_heating: null
+    notification_interval_minutes: 30
+    enabled: false

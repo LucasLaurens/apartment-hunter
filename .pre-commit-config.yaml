@@ -1,0 +1,29 @@
+# `make full` runs at push time, not at commit time. As a pre-commit hook it stashes
+# unstaged work before running; interrupt the run (Ctrl+C, a timeout) and the stash is
+# never popped — the working tree silently loses those changes. At pre-push there is
+# nothing to stash, and the whole series is still gated before it leaves the machine.
+# The history carries one identity, LucasLaurens, and no tool attribution. Both checks
+# run at commit-msg, which stashes nothing, so they are safe where make full is not.
+# Install all hook types: pre-commit install --hook-type pre-push --hook-type commit-msg
+repos:
+  - repo: local
+    hooks:
+      - id: make-full
+        name: make full (lint, check, analyze, test)
+        entry: make full
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: commit-identity
+        name: author and committer are LucasLaurens
+        entry: bash -c 'for v in GIT_AUTHOR_IDENT GIT_COMMITTER_IDENT; do git var "$v" | grep -q "^LucasLaurens <" || { echo "$v is not LucasLaurens"; exit 1; }; done'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit-msg]
+      - id: commit-message-attribution
+        name: commit message names no tool or second identity
+        entry: '(?i)(co-authored-by|claude|anthropic|heyteam)'
+        language: pygrep
+        stages: [commit-msg]

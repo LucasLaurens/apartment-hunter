@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "apartment-hunter"
+version = "0.1.0"
+description = "Smart French rental apartment aggregator with notifications"
+requires-python = ">=3.13"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+    "playwright>=1.40",
+    "httpx>=0.26",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "pydantic>=2.5",
+    "pydantic-settings>=2.1",
+    "aiosqlite>=0.19",
+    "typer>=0.9",
+    "rich>=13.7",
+    "python-dotenv>=1.0",
+    "loguru>=0.7",
+    "geopy>=2.4",
+    "tenacity>=8.2",
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.29",
+    "curl-cffi>=0.15.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "faker>=25.0",
+    "pre-commit>=3.7",
+]
+
+[project.scripts]
+hunt = "apartment_hunter.presentation.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/apartment_hunter"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=src --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*"]

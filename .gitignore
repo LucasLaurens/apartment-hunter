@@ -1,0 +1,35 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Virtual env
+.venv/
+venv/
+
+# SQLite database
+*.db
+*.db-shm
+*.db-wal
+
+# UI audit output (`make ui-check`)
+.ui-screenshots/
+
+# OS
+.DS_Store
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# Carte des loyers files, downloaded once per vintage (ADR-0010)
+.cache/
