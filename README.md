@@ -272,5 +272,7 @@ lointaine.
 
 ## Licence
 
-[MIT](LICENSE). Le code est libre ; les annonces collectées restent la propriété de leurs
+[MIT](LICENSE). Les skills de `.claude/skills/` reprises de
+[mattpocock/skills](https://github.com/mattpocock/skills) restent sous sa licence MIT
+([notice](.claude/skills/THIRD_PARTY_LICENSE)). Le code est libre ; les annonces collectées restent la propriété de leurs
 éditeurs, et chaque utilisateur répond de l'usage qu'il fait de l'outil.
