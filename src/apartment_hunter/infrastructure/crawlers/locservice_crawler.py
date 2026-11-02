@@ -43,6 +43,7 @@ from .base_crawler import (
     parse_commune_label,
     parse_floor,
     parse_price_from_euro_node,
+    parse_room_type,
     parse_surface_m2,
     read_tag_attr,
 )
@@ -50,7 +51,6 @@ from .geo_postal import resolve_department, resolve_postal_code
 
 _BASE_URL: Final = "https://www.locservice.fr"
 _PARTNER_MARK: Final = "Logement partenaire"
-_ROOMS_RE: Final = re.compile(r"\bT(\d+)\b")
 _SAINT_RE: Final = re.compile(r"(?<![a-z])saint(?![a-z])")
 _CHARGES_INCLUDED: Final = "charges comprises"
 _CHARGES_EXCLUDED: Final = "hors charges"
@@ -170,7 +170,6 @@ class LocserviceCrawler(BaseCrawler):
             title = link.get_text(" ", strip=True)
             excerpt = card.select_one(".accommodation-ad-description")
             description = excerpt.get_text(" ", strip=True) if excerpt else None
-            rooms = _ROOMS_RE.search(title)
             return Listing(
                 id=build_listing_id(url),
                 url=url,
@@ -180,7 +179,7 @@ class LocserviceCrawler(BaseCrawler):
                 # A bare "€ / mois": the card does not say whether charges are in it.
                 price=Price(amount=parse_price_from_euro_node(card)),
                 surface_m2=parse_surface_m2(" ".join(facts)),
-                rooms=int(rooms.group(1)) if rooms else None,
+                rooms=parse_room_type(title),
                 floor=parse_floor(f"{title} {description or ''}"),
                 furnished=detect_furnished(title),
                 description=description,

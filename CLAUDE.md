@@ -65,7 +65,8 @@ same commit. Full rationale: `docs/technical/conventions.md`.
    `async def fetch(filter) -> list[Listing]`
 3. Reuse the base toolkit — `_gather_cities`, `_paginate`, `_fetch_html`,
    `_enrich_details`, `build_city_slug`, `parse_surface_m2`, `parse_rooms`, `parse_floor`,
-   `parse_price_from_euro_node`, `is_in_department`, `parse_commune_label`. Do not
+   `parse_price_from_euro_node`, `is_in_department`, `parse_commune_label`,
+   `parse_room_type` (« T2 », « Studio »). Do not
    re-implement them locally. A listing carries the commune **its card** names, never the
    searched one: raise `MissingCommuneError` when the card names none.
 4. Add to the list returned by `build_crawlers()` in `infrastructure/container.py`

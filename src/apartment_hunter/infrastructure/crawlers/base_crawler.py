@@ -155,6 +155,10 @@ def build_absolute_url(base_url: str, href: str) -> str:
 _PER_SQUARE_METRE_RE = re.compile(r"/\s*m\s*[²2]", re.I)
 _SURFACE_RE = re.compile(r"(\d+[.,]?\d*)\s*m\s*[²2]", re.I)
 _ROOMS_RE = re.compile(r"(\d+)\s*(?:pcs|pièce)", re.I)
+# The agents' shorthand: "T2", "F3", "T1 bis"; a studio is one room.
+_ROOM_TYPE_RE = re.compile(r"\b[TF](\d+)\b")
+_STUDIO_RE = re.compile(r"\bstudio\b", re.I)
+
 _GROUND_FLOOR_RE = re.compile(r"\bRDC\b|rez[- ]de[- ]chauss", re.I)
 _TOP_FLOOR_RE = re.compile(r"dernier\s+[ée]tage", re.I)
 # Structured label of a tag list: "Étage 3", "Etage : 2", "Étage 3/5".
@@ -177,6 +181,13 @@ def parse_rooms(text: str) -> int | None:
     """Room count from a card's text ("3 pièces", Century 21's "3 pcs")."""
     m = _ROOMS_RE.search(text)
     return int(m.group(1)) if m else None
+
+
+def parse_room_type(text: str) -> int | None:
+    """Room count from the shorthand a title uses: "T2" → 2, "F3" → 3, "Studio" → 1."""
+    if m := _ROOM_TYPE_RE.search(text):
+        return int(m.group(1))
+    return 1 if _STUDIO_RE.search(text) else None
 
 
 def parse_floor(text: str) -> Floor | None:

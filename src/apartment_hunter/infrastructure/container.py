@@ -32,6 +32,7 @@ from .crawlers import (
     OrpiCrawler,
     PapCrawler,
     ParuVenduCrawler,
+    SbmImmobilierCrawler,
     SquareHabitatCrawler,
     TwoAImmobilierCrawler,
 )
@@ -54,6 +55,7 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         CityaCrawler(timeout=timeout),
         SquareHabitatCrawler(timeout=timeout),
         TwoAImmobilierCrawler(timeout=timeout),
+        SbmImmobilierCrawler(timeout=timeout),
     ]
 
 

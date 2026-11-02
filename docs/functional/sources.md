@@ -1,7 +1,7 @@
 # Sources de données
 
-12 sites scrapés, dont quatre (Bien'ici, Locservice, FNAIM, 2A Immobilier) seulement quand les
-règles des sites sont ignorées. Données disponibles et limites pour chacun.
+13 sites scrapés, dont cinq (Bien'ici, Locservice, FNAIM, 2A Immobilier, SBM Immobilier) seulement
+quand les règles des sites sont ignorées. Données disponibles et limites pour chacun.
 
 > **Règle du projet :** seules les plateformes exposant **publiquement** toute l'info nécessaire,
 > **sans login ni cookie de session**, et **filtrant par ville**, sont utilisées. Une source
@@ -39,8 +39,9 @@ ne change rien aux protections anti-bot : un site qui bloque un client honnête
 | **Locservice** (règles des sites ignorées seulement) | Direct proprio | curl_cffi + SSR HTML | DPE + GES (détail) | ❌ non publiée | 1 requête (communes voisines, ~20 km) |
 | **FNAIM** — règles des sites ignorées seulement | Fédération d'agences | curl_cffi + SSR HTML | DPE + GES (détail) | ❌ non publiée | par commune |
 | **2A Immobilier** — règles des sites ignorées seulement | Agence locale | curl_cffi + SSR HTML | DPE (détail), pas de GES | ❌ non publiée | stock entier (8 pages) |
+| **SBM Immobilier** — règles des sites ignorées seulement | Agence locale | curl_cffi + SSR HTML + JSON-LD | DPE + GES (détail) | ✅ liste (« Ajout : … ») | stock entier (4 pages) |
 
-PAP/Century21/Laforêt/Square Habitat/Bien'ici/Locservice/2A Immobilier couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, Bien'ici par un carré autour de la ville, Locservice par ses communes voisines (~20 km), 2A Immobilier par son stock entier, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya/FNAIM itèrent les communes. Le matcher filtre ensuite au rayon exact.
+PAP/Century21/Laforêt/Square Habitat/Bien'ici/Locservice/2A Immobilier/SBM Immobilier couvrent la zone en **une recherche** (`covers_radius`) — Square Habitat par département, Bien'ici par un carré autour de la ville, Locservice par ses communes voisines (~20 km), 2A Immobilier et SBM Immobilier par leur stock entier, les autres par ville/rayon ; Orpi/Foncia/ParuVendu/Citya/FNAIM itèrent les communes. Le matcher filtre ensuite au rayon exact.
 
 ### Date de parution
 
@@ -90,6 +91,7 @@ Presque aucune source ne met l'étage sur ses cartes de résultat. Il est lu sur
 | **ParuVendu** | page détail (label + prose), souvent bloquée par un captcha → étage inconnu |
 | **Laforêt** | page détail, uniquement dans la description |
 | **2A Immobilier** | page détail, ligne « Etage » (« N.C. » → inconnu) |
+| **SBM Immobilier** | page détail, fiche JSON-LD (« Etage ») |
 | **Foncia, Century21, PAP, Citya** | non publié → étage inconnu |
 
 Tant que l'étage reste inconnu, `exclude_ground_floor`, `exclude_first_floor` et `top_floor_only` n'écartent rien sur cette source (règle « données manquantes » ci-dessous) — sauf si le texte dit explicitement « RDC » / « rez-de-chaussée ».
@@ -120,6 +122,13 @@ Pas de page pour toutes les communes (Epagny Metz-Tessy renvoie 404) : celles-l�
 
 ### Citya
 **citya.com** · curl_cffi + SSR. URL `/annonces/location/appartement/{ville}-{cp}`. Deux pièges : les villes à arrondissements résolvent vers l'un d'eux (Lyon → 69001), inconnu de Citya → repli automatique sur `{dept}000` ; et une ville sans stock est **remplie de carrousels inter-villes** (Lyon, Riom… sur une page Annecy) → écartés par le garde-fou département. Données : prix, surface, pièces, ville, code postal, DPE + GES (détail, nom de fichier des SVG Inkscape).
+
+### Locservice
+**locservice.fr** · curl_cffi + SSR. **Crawlé seulement quand les règles des sites sont ignorées** : ses mentions légales interdisent toute reproduction sans accord écrit ([ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)). URL `/{département}-{code}/location-appartement-{commune}.html` puis `-p2.html`, `-p3.html` (département lu sur geo.api.gouv.fr, « Saint » écrit « st »). La page commune liste aussi les communes voisines jusqu'à ~20 km, Savoie comprise depuis Annecy → `covers_radius`. Annonces de particuliers ; les cartes « Logement partenaire » (annonces d'agence reprises d'ailleurs, « Professionnel » sur la page détail) sont écartées. Données : loyer **charges comprises** (dit par la page détail seulement), surface, pièces (T1–T6), commune, code postal, meublé, photo, extrait de description ; DPE + GES et étage sur la page détail. Pas de date. Contacter un propriétaire y est payant ; le crawler ne fait que lire l'annonce et son lien.
+### FNAIM — règles des sites ignorées seulement
+**fnaim.fr** · curl_cffi + SSR. Fédération d'agences indépendantes : elle apporte des agences locales qu'aucune autre source ne publie (2A Immobilier, Agence BFM, Entre 2 Lacs, Like My Home…). Ses mentions légales interdisent l'extraction et la réutilisation de sa base, et son `robots.txt` interdit les pages détail de location : la source ne tourne donc **que si vous avez choisi d'ignorer les règles des sites**. URL `/liste-annonces-immobilieres/18-location-appartement-{ville}-{cp}.htm`, une commune par page (49 annonces pour Annecy le 2026-11-01). Données : loyer mensuel (la carte ne dit ni CC ni HC → « charges ? »), surface, pièces, meublé (puce), ville, code postal, **agence** (annonceur), photos, DPE + GES et étage (détail). Pas de date de parution.
+### SBM Immobilier — règles des sites ignorées seulement
+**sbm-immo.com** · curl_cffi + SSR (WordPress) + JSON-LD. Une agence d'Annecy. Ses mentions légales interdisent de reproduire, copier ou stocker tout élément du site sans son accord écrit : la source n'entre dans le crawl que si vous avez choisi d'ignorer les règles des sites. Son `robots.txt` autorise tout. Le stock entier tient dans `/locations-immobilieres/` (12 biens par page, 4 pages le 2026-11-02, garages compris, écartés). Données : loyer **charges comprises** (la page détail le décompose en loyer + provision), type (T1, T2, studio → pièces), commune et code postal, position de la carte, surface, photo, **date d'ajout** ; DPE, GES, étage et meublé sur la page détail.
 
 ### 2A Immobilier — règles des sites ignorées seulement
 **2a-immo.fr** · curl_cffi + SSR. Une seule agence, implantée à Annecy, Aix-les-Bains, Rumilly et Chambéry. Ses mentions légales interdisent toute reproduction et utilisation des données du site sans autorisation : la source n'entre dans le crawl que si vous avez choisi d'ignorer les règles des sites ([ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)). Le stock de location entier tient dans une liste (`/location`, 8 pages le 2026-11-01, caves, parkings et locaux compris) lue d'un bloc ; seuls les appartements sont gardés, le matcher réduit au rayon. Données : loyer charges comprises, surface, pièces, commune (sans code postal), meublé (bandeau « Meublé » ; sans bandeau, inconnu), photo, DPE et étage (détail). Pas de GES fiable, pas de date. Le 2026-11-01 : 37 appartements, dont 31 à 20 km d'Annecy au plus (Annecy, Annecy-le-Vieux, Cran-Gevrier, Pringy, Villaz, Chavanod, Sevrier, Saint-Jorioz, Menthon, Thônes, Rumilly).

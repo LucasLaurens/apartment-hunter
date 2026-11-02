@@ -45,6 +45,7 @@ crawlers tournent en parallèle sans se gêner mutuellement.
 | Citya | 2.0s |
 | Square Habitat | 2.5s |
 | 2A Immobilier | 2.5s, une requête à la fois (`CITY_CONCURRENCY = 1`) |
+| SBM Immobilier | 2.5s, une requête à la fois (`CITY_CONCURRENCY = 1`) |
 
 ### Un seul nom, aucun déguisement
 
@@ -120,6 +121,7 @@ nouveau crawler déclare son site et réutilise le reste :
 | `self._paginate(build_page_url, parse_page, label)` | Parcourt les pages jusqu'à épuisement (voir plus bas) |
 | `build_city_slug(city, separator)` | « Saint-Jorioz » → `saint-jorioz` (Century21 : séparateur `+`) |
 | `parse_surface_m2(text)` / `parse_rooms(text)` | « 60,3 m² » → `60.3`, « 3 pièces » / « 3 pcs » → `3` |
+| `parse_room_type(text)` | « T2 » / « F3 » → `2` / `3`, « Studio » → `1` (titres d'annonce) |
 | `parse_floor(text)` | « Étage 3/5 », « Etage : 2 », « au 4e étage sur 5 », « RDC » → `Floor` ; `None` si le texte n'en dit rien |
 | `parse_price_from_euro_node(card)` | Prix lu sur le nœud qui porte le « € », pas sur toute la carte |
 | `read_tag_attr` / `read_tag_classes` | Attributs bs4 typés proprement |
@@ -235,6 +237,110 @@ connaît pas (`…/auvergne-rhone-alpes/haute-savoie-74`), il est donc lu dans
 `nbEtagesBatiment`) et meublé. `robots.txt` interdit `/resultat-location` et `*/immo/*` ; la
 route `/annonces/location/bien/…` n'en relève pas.
 
+### API JSON publique (Bien'ici) — règles des sites ignorées seulement
+
+Les CGU de Bien'ici interdisent la reproduction de ses annonces : le crawler déclare
+`forbids_reproduction = True` et ne tourne que si le chasseur a choisi d'ignorer les règles des
+sites ([ADR-0012](../decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)).
+Son `robots.txt` n'interdit ni l'une ni l'autre des deux routes lues.
+
+Le front du site lit ses annonces dans une API JSON publique, sans connexion, et le crawler fait
+la même chose, sous `CRAWLER_USER_AGENT` et par `_fetch_html` :
+
+1. `https://res.bienici.com/suggest.json?q={ville}` — le suggesteur de lieux du site ; l'entrée
+   `type: "city"` du même nom (et portant le code postal de la commune, pour les homonymes)
+   donne sa `boundingBox`, dont le milieu sert de centre. Mis en cache pour la vie du crawler,
+   une réponse seulement.
+2. `https://www.bienici.com/realEstateAds.json?filters={…}` — `filterType: "rent"`,
+   `propertyType: ["flat"]`, `onTheMarket: [true]`, tri par date de parution, `size` 100 et
+   `from` pour la page (`MAX_PAGES` = 4). La zone est le filtre `limit` (avec
+   `mapMode: "enabled"`) : un **polyline encodé** (format Google) du carré circonscrit au rayon
+   (`build_search_square`, `format_polyline`). Une recherche couvre donc tout le rayon
+   (`covers_radius`) et le matcher découpe le cercle.
+
+Champs lus : `price` est le loyer **charges comprises** (sur chaque annonce qui donne les deux,
+il vaut `rentWithoutCharges + charges`) ; avec `charges`, le prix est décomposé loyer + charges,
+sans `charges` il reste un loyer nu marqué « charges non communiquées ». `surfaceArea`,
+`roomsQuantity`, `floor` / `floorQuantity` (dernier étage quand ils sont égaux ; sans `floor`,
+`parse_floor` sur la description), `energyClassification` / `greenhouseGazClassification`,
+`isFurnished`, `city`, `postalCode`, `blurInfo.position` (position floutée à 50 m le plus souvent ;
+écartée quand le flou est la commune entière, `cityOrArrondissement`), `photos[].url`,
+`publicationDate` (date du site), `accountDisplayName` (annonceur, absent sur près d'une annonce
+sur deux). L'URL d'une annonce est `https://www.bienici.com/annonce/{id}`, route que le front
+reconnaît. Une annonce qui ne serait pas une location d'appartement est ignorée.
+
+Une recherche ne porte qu'une ville de base : `CITY_CONCURRENCY = 1` garde 3 s entre deux
+requêtes. Constat du 2026-11-01, Annecy / 20 km : 145 appartements en 2 pages.
+### Locservice — règles des sites ignorées seulement
+
+`locservice_crawler.py`, `forbids_reproduction = True` : ses mentions légales interdisent la
+reproduction sans accord écrit, il ne tourne donc que sous `SiteRules.IGNORED`. Son
+`robots.txt` autorise les pages lues (relevé le 2026-11-01). HTML serveur, `covers_radius` :
+la page commune liste la commune puis ses voisines jusqu'à ~20 km, chacune marquée
+« À 6km de Annecy », Savoie comprise (Arith depuis Annecy) — d'où **pas** de garde-fou
+département, ce n'est pas du remplissage.
+
+- URL `/{département}-{code}/location-appartement-{commune}.html`, pages suivantes
+  `-p2.html`, `-p3.html` (`build_search_url`, `build_page_url`). Le département (code et nom)
+  vient de geo.api.gouv.fr par code postal (`geo_postal.resolve_department`), jamais coupé
+  des deux premiers chiffres (Corse, DOM). Le site écrit « Saint » `st` (`st-jorioz`,
+  `menthon-st-bernard`). Une page au-delà de la dernière redirige vers la dernière :
+  `_paginate` n'y trouve rien de neuf et s'arrête.
+- Cartes `li.accommodation-ad` : titre (« Appartement T2 meublé à louer » → pièces, meublé),
+  commune et code postal (`parse_commune_label`), surface, loyer nu « € / mois », extrait,
+  vignette (la plus large du `srcset`). Les cartes « Logement partenaire » sont des annonces
+  d'agence reprises d'ailleurs (iad…, « Professionnel » sur la page détail) : écartées, la
+  source reste `PRIVATE_ONLY_SOURCES`.
+- Page détail : DPE et GES (`.energy-bar-item--active`, `.pollution-bar-item--active` — la
+  barre entière est dessinée, seul l'élément actif compte ; « NA » = inconnu), étage
+  (`parse_floor` sur la description et les badges seuls, pas sur les avis d'utilisateurs de
+  la page), meublé (`detect_furnished_chip` sur les badges) et **« charges comprises »**,
+  que la carte n'écrit pas : `ListingDetails.charges_included`, replié par `merge_details`.
+  Pas de date de parution, seulement un badge « Récent ».
+### FNAIM — règles des sites ignorées seulement
+
+`FnaimCrawler` déclare `forbids_reproduction = True` : les mentions légales de fnaim.fr
+interdisent l'extraction et la réutilisation de sa base, et son `robots.txt` interdit les pages
+détail de location (`Disallow: /annonce-immobiliere/*/18-location*`). Il n'entre donc dans le
+crawl que si le chasseur a choisi d'ignorer les règles des sites (ADR-0012) ; le reste ne change
+pas (nom honnête, cadence, refus respecté).
+
+SSR, cartes `ul.liste li.item` ; la même liste porte des encarts d'articles conseil, reconnus à
+l'absence de lien `/annonce-immobiliere/`. URL `/liste-annonces-immobilieres/18-location-appartement-{ville}-{cp}.htm`
+(code postal via geo.api.gouv.fr), page N `…-{cp}-page-{N}.htm` : les liens du site y ajoutent
+l'état de la recherche en paramètres (`localites=[…]`, tri, `cp=`), le chemin seul sert la même
+page (vérifié le 2026-11-01). 25 cartes par page. La page d'une commune ne liste que cette commune
+(Annecy : 74000 et 74370, 49 annonces), d'où l'itération des communes. Quelques cartes portent
+`haute-savoie-74` dans leur URL mais leur commune (`p.lieu`) reste Annecy ; le garde-fou
+département reste en place pour une commune sans stock.
+
+Carte : loyer « 807€ par mois » (ni CC ni HC : `charges_included` reste inconnu, la carte
+affiche « charges ? »), surface et pièces dans le titre, puces (`Meublé`, `Balcon`, `Ascenseur`…
+→ `detect_furnished_chip`), code postal + commune (`p.lieu`), **nom de l'agence** (`.agence .nom`)
+lu comme annonceur, photos. Page détail : DPE et GES (« DPE : D (258 kWh/m² an) »), étage dans la
+description (`parse_floor`). Elle dit aussi « Charges comprises », que `ListingDetails` ne porte
+pas encore. Aucune date de parution, ni carte ni détail.
+### Agence seule, WordPress et JSON-LD (SBM Immobilier) — règles des sites ignorées seulement
+
+`sbm_immobilier_crawler.py`, `forbids_reproduction = True` : ses mentions légales interdisent de
+reproduire ou stocker le site sans accord écrit ; son `robots.txt` autorise tout. Même forme que
+2A Immobilier : le stock entier dans une liste, lue une fois (`covers_radius`), le matcher
+découpe le rayon.
+
+- Liste `/locations-immobilieres/`, puis `/page/N/` (`build_list_page_url`) ; la marche s'arrête
+  sans lien `a.rh_pagination__next` (`MAX_PAGES = 8`, 4 pages le 2026-11-02).
+- Cartes `div.rh-ultra-property-card` : un appartement porte « Appartement » dans sa ligne de
+  type (un garage, « Stationnement », est écarté). Titre « T2 » / « Studio » → pièces
+  (`parse_room_type`, partagé avec Locservice), « 74000 Annecy, France » → commune et code
+  postal (sinon `MissingCommuneError`), `data-rhea-map-location` → position, surface,
+  `data-lazy-src` → photo, « Ajout : 30 octobre 2026 » → date de parution (`SITE`).
+- Page détail : DPE et GES par leurs classes (`details-dpe dpe-D`, `details-ges ges-D`), et le
+  bloc JSON-LD `RealEstateListing` (`read_listing_properties`) pour l'étage (« Etage ») et
+  « Provision sur charges » : présente, le loyer de la carte était le total charges comprises
+  (1 200 € + 130 € = 1 330 € sur l'annonce relevée), donc `charges_included`. Meublé lu dans la
+  description (`detect_furnished`). Le chauffage collectif n'est pas repris : `ListingDetails`
+  n'a pas ce champ.
+
 ### Agence seule, stock entier en une liste (2A Immobilier)
 
 Une agence locale (Annecy, Aix-les-Bains, Rumilly, Chambéry), site Drupal rendu serveur. Ses
@@ -349,6 +455,7 @@ Où chaque source publie sa date :
 | **Orpi** | `dateCreation` de la page détail (celui des cartes est tamponné au jour du crawl) | requête déjà faite |
 | **PAP** | `p.item-date` « Publié le 3 août 2026 » sur la page détail, lue par la session de la recherche (un client sans elle reçoit 403) | +1 requête / annonce |
 | **Bien'ici** | `publicationDate` de l'API (UTC, ramenée à l'heure locale au stockage) | gratuit |
+| **SBM Immobilier** | « Ajout : 30 octobre 2026 » sur la carte de la liste | gratuit |
 | **Century21, Laforêt, Citya, Locservice, FNAIM, 2A Immobilier** | aucune date publiée (Locservice : un badge « Récent » seulement) | — |
 
 Les insertions étant `INSERT OR IGNORE`, `SqliteRepository._backfill_site_dates` met à jour les
@@ -425,11 +532,11 @@ CrawlAllSources.execute()
 Pour éviter de relancer chaque source commune par commune, le crawl dispatche deux filtres :
 
 - **Sources `covers_radius = True`** (PAP, Century21, Laforêt, Square Habitat, Bien'ici,
-  Locservice, 2A Immobilier) : le site couvre déjà la zone (rayon natif PAP, communes voisines pour
+  Locservice, 2A Immobilier, SBM Immobilier) : le site couvre déjà la zone (rayon natif PAP, communes voisines pour
   Century21 et Laforêt — dont la page ville liste aussi le stock des agences alentour —,
   département entier pour Square Habitat, carré autour de la ville pour Bien'ici, voisines jusqu'à
   ~20 km pour Locservice — un rayon de filtre plus large n'y voit pas au-delà —, stock entier de
-  l'agence pour 2A Immobilier).
+  l'agence pour 2A Immobilier et SBM Immobilier).
   Elles reçoivent le filtre **de base** → **une seule recherche** par ville cible.
 - **Sources par ville exacte** (Orpi, Foncia, ParuVendu, Citya, FNAIM) : reçoivent le filtre **étendu** aux
   communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon).
@@ -533,6 +640,7 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         LocserviceCrawler(timeout=timeout),
         FnaimCrawler(timeout=timeout),
         TwoAImmobilierCrawler(timeout=timeout),
+        SbmImmobilierCrawler(timeout=timeout),
         AvendreCrawler(timeout=timeout),   # ← ajouter ici
     ]
 ```
