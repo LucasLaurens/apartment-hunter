@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Apartment Hunter, la vidéo</title>
+    <style>
+      /* The light theme of styles.css, restated: the stage is a file:// page, not the app. */
+      :root {
+        --canvas: oklch(97.2% 0.008 155);
+        --surface: oklch(99.5% 0.004 155);
+        --border: oklch(90% 0.014 155);
+        --text: oklch(25% 0.02 155);
+        --text-muted: oklch(46% 0.018 155);
+        --accent: oklch(50% 0.12 157);
+        --accent-soft: oklch(94% 0.06 157);
+        --shadow: 0 24px 60px oklch(26% 0.02 155 / 0.14), 0 2px 8px oklch(26% 0.02 155 / 0.08);
+        --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0 }
+      html, body { overflow: hidden; background: var(--canvas); color: var(--text); font-family: var(--font) }
+      body { position: relative }
+      .layer { position: absolute; opacity: 0; will-change: opacity, transform }
+      .center {
+        inset: 0; padding: 0 96px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; gap: 32px;
+      }
+      .caption { left: 72px; right: 72px; display: flex; flex-direction: column; gap: 18px }
+      .kicker { font-size: 26px; font-weight: 600; color: var(--accent); letter-spacing: 0.01em }
+      .title { font-size: 62px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance }
+      .sub { font-size: 32px; line-height: 1.35; color: var(--text-muted); text-wrap: pretty }
+      .credit { font-size: 18px; color: var(--text-muted) }
+      .center .title { font-size: 76px }
+      .center .sub { font-size: 36px; max-width: 900px }
+      .brand { display: flex; align-items: center; gap: 22px; font-size: 64px; font-weight: 700; letter-spacing: -0.02em }
+      .brand svg { width: 76px; height: 76px; color: var(--accent) }
+      .brand.small { font-size: 34px; gap: 12px }
+      .brand.small svg { width: 40px; height: 40px }
+      .badge {
+        display: inline-block; padding: 10px 22px; border-radius: 999px;
+        background: var(--accent-soft); color: var(--accent); font-size: 28px; font-weight: 700;
+      }
+      .frame {
+        left: 72px; right: 72px; overflow: hidden; border-radius: 22px;
+        background: var(--surface); box-shadow: var(--shadow), 0 0 0 1px var(--border);
+      }
+      .vertical .kicker { font-size: 32px }
+      .vertical .title { font-size: 74px }
+      .vertical .sub { font-size: 40px }
+      .vertical .credit { font-size: 22px }
+      .vertical .center .title { font-size: 88px }
+      .vertical .center .sub { font-size: 44px }
+      .frame img { position: absolute; left: 0; top: 0; transform-origin: 0 0 }
+      .frame.contain { background: transparent; box-shadow: none; overflow: visible }
+      .frame.contain img { border-radius: 26px; box-shadow: var(--shadow) }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute">
+      <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+        <path d="M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" /><path d="M9.5 21v-6h5v6" />
+      </symbol>
+    </svg>
+    <script>
+      // Every frame is a pure function of t: render.py calls seek(t) and screenshots, so the
+      // video never depends on the speed of the machine that renders it.
+      const FORMATS = {
+        square: { width: 1080, height: 1080, captionTop: 70, frameTop: 420, frameHeight: 600 },
+        vertical: { width: 1080, height: 1920, captionTop: 210, frameTop: 700, frameHeight: 1060 },
+      }
+      const format = FORMATS[new URLSearchParams(location.search).get('format')] ?? FORMATS.square
+      const ANIL_CREDIT = 'Estimations ANIL, à partir des données du Groupe SeLoger et de leboncoin (Carte des loyers)'
+      const MAP_CREDIT = 'Carte : OpenFreeMap, données © OpenStreetMap. Annonces fictives de démonstration.'
+      const DEMO_CREDIT = 'Annonces fictives de démonstration.'
+      const BRAND = '<svg aria-hidden="true"><use href="#i-home" /></svg>Apartment Hunter'
+
+      // A crop is a centre (fraction of the shot) and a zoom: 1 is the largest crop that fills
+      // the frame. `fromVertical` / `toVertical` override it where the tall frame cuts too much.
+      const SCENES = [
+        {
+          start: 0, end: 4.4, layout: 'center',
+          html: `<p class="title">Chercher une location, c’est dix onglets ouverts toute la journée.</p>
+                 <p class="sub">Les mêmes annonces partout. Et la bonne part en quelques heures.</p>`,
+        },
+        {
+          start: 4.4, end: 8.6, layout: 'center',
+          html: `<p class="brand">${BRAND}</p>
+                 <p class="sub">Le chasseur de locations que je me suis construit.</p>`,
+        },
+        {
+          start: 8.6, end: 14.6, kicker: 'Une seule liste',
+          title: 'Les annonces de huit sites, passées à mes critères.',
+          sub: 'Budget charges comprises, surface, étage, DPE, rayon autour de mes villes.',
+          credit: DEMO_CREDIT,
+          shot: 'shots/liste-light.png', from: { cx: 0.5, cy: 0.5, z: 1 }, to: { cx: 0.62, cy: 0.42, z: 1.55 },
+        },
+        {
+          start: 14.6, end: 20.6, kicker: 'Le bon prix ?',
+          title: 'Chaque loyer face au marché de sa commune.',
+          sub: '« −17 % vs réf. » : les bonnes affaires sautent aux yeux.',
+          credit: ANIL_CREDIT,
+          shot: 'shots/carte-annonce.png', contain: true,
+        },
+        {
+          start: 20.6, end: 26.6, kicker: 'La carte',
+          title: 'Toute ma zone, commune par commune.',
+          sub: 'Combien de logements, et à quelle distance du centre.',
+          credit: MAP_CREDIT,
+          shot: 'shots/carte.png', from: { cx: 0.55, cy: 0.5, z: 1 }, to: { cx: 0.62, cy: 0.45, z: 1.5 },
+        },
+        {
+          start: 26.6, end: 32.6, kicker: 'Décider vite',
+          title: "Pas pour moi ? Écarté d’une touche.",
+          sub: 'Avec sa raison. Il ne revient plus, même republié sur un autre site.',
+          credit: DEMO_CREDIT,
+          shot: 'shots/ecarter.png', from: { cx: 0.5, cy: 0.55, z: 1 }, to: { cx: 0.5, cy: 0.88, z: 1.6 },
+          toVertical: { cx: 0.48, cy: 0.88, z: 1.1 },
+        },
+        {
+          start: 32.6, end: 37.6, kicker: 'Seulement le neuf',
+          title: "« Nouveau » tant que je ne l’ai pas ouvert.",
+          sub: 'Une veille relance la recherche et signale ce qui vient de paraître.',
+          credit: DEMO_CREDIT,
+          shot: 'shots/liste-dark.png', from: { cx: 0.6, cy: 0.35, z: 1.25 }, to: { cx: 0.62, cy: 0.4, z: 1.5 },
+        },
+        {
+          start: 37.6, end: 46, layout: 'center', last: true,
+          html: `<span class="badge">Pas encore sorti</span>
+                 <p class="title">Pour l’instant, je m’en sers pour ma propre recherche.</p>
+                 <p class="sub">Si assez de monde est intéressé, je le mets en ligne. Dites‑le‑moi en commentaire.</p>
+                 <p class="brand small">${BRAND}</p>`,
+        },
+      ]
+      const DURATION = SCENES.at(-1).end
+      const FADE_IN = 0.6
+      const FADE_OUT = 0.4
+      const RISE = 36
+
+      document.documentElement.style.width = `${format.width}px`
+      document.documentElement.style.height = `${format.height}px`
+      document.body.style.width = `${format.width}px`
+      document.body.classList.toggle('vertical', format === FORMATS.vertical)
+      document.body.style.height = `${format.height}px`
+
+      const clamp = (value) => Math.min(1, Math.max(0, value))
+      const easeOut = (p) => 1 - Math.pow(1 - p, 4)
+      const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
+
+      function buildLayer(className, html, top) {
+        const layer = document.createElement('div')
+        layer.className = `layer ${className}`
+        layer.innerHTML = html
+        if (top !== undefined) layer.style.top = `${top}px`
+        document.body.append(layer)
+        return layer
+      }
+
+      function buildScene(scene) {
+        if (scene.layout === 'center') return { scene, text: buildLayer('center', scene.html) }
+        const caption = `<p class="kicker">${scene.kicker}</p><p class="title">${scene.title}</p>
+                         <p class="sub">${scene.sub}</p>`
+        const text = buildLayer('caption', caption, format.captionTop)
+        const frame = buildLayer(`frame${scene.contain ? ' contain' : ''}`, `<img src="${scene.shot}" alt="" />`, format.frameTop)
+        frame.style.height = `${format.frameHeight}px`
+        const credit = buildLayer('caption credit', scene.credit, format.frameTop + format.frameHeight + 22)
+        return { scene, text, frame, credit, image: frame.querySelector('img') }
+      }
+
+      const built = SCENES.map(buildScene)
+
+      // O(1) per call: the crop is two interpolated rectangles, clamped inside the shot.
+      function computeCrop(image, frameWidth, crop) {
+        const aspect = frameWidth / format.frameHeight
+        const fullWidth = Math.min(image.naturalWidth, image.naturalHeight * aspect)
+        const width = fullWidth / crop.z
+        const height = width / aspect
+        const x = Math.min(Math.max(crop.cx * image.naturalWidth - width / 2, 0), image.naturalWidth - width)
+        const y = Math.min(Math.max(crop.cy * image.naturalHeight - height / 2, 0), image.naturalHeight - height)
+        return { x, y, scale: frameWidth / width }
+      }
+
+      function placeShot(item, progress) {
+        const { scene, frame, image } = item
+        const frameWidth = frame.clientWidth
+        if (scene.contain) {
+          const fit = Math.min(frameWidth / image.naturalWidth, format.frameHeight / image.naturalHeight)
+          const scale = fit * (0.92 + 0.08 * easeInOut(progress))
+          const x = (frameWidth - image.naturalWidth * scale) / 2
+          const y = (format.frameHeight - image.naturalHeight * scale) / 2
+          image.style.transform = `translate(${x}px, ${y}px) scale(${scale})`
+          return
+        }
+        const vertical = format === FORMATS.vertical
+        const from = (vertical && scene.fromVertical) || scene.from
+        const to = (vertical && scene.toVertical) || scene.to
+        const p = easeInOut(progress)
+        const crop = computeCrop(image, frameWidth, {
+          cx: from.cx + (to.cx - from.cx) * p,
+          cy: from.cy + (to.cy - from.cy) * p,
+          z: from.z + (to.z - from.z) * p,
+        })
+        image.style.transform = `translate(${-crop.x * crop.scale}px, ${-crop.y * crop.scale}px) scale(${crop.scale})`
+      }
+
+      function reveal(element, local, duration, delay, last) {
+        const entry = easeOut(clamp((local - delay) / FADE_IN))
+        const exit = last ? 1 : clamp((duration - local) / FADE_OUT)
+        element.style.opacity = String(Math.min(entry, exit))
+        element.style.transform = `translateY(${(1 - entry) * RISE}px)`
+      }
+
+      // O(scenes) per frame, eight scenes.
+      window.seek = (t) => {
+        for (const item of built) {
+          const { scene } = item
+          const local = t - scene.start
+          const duration = scene.end - scene.start
+          const visible = local >= 0 && local < duration
+          for (const element of [item.text, item.frame, item.credit]) {
+            if (element) element.style.visibility = visible ? 'visible' : 'hidden'
+          }
+          if (!visible) continue
+          reveal(item.text, local, duration, 0, scene.last)
+          if (!item.frame) continue
+          reveal(item.frame, local, duration, 0.15, scene.last)
+          reveal(item.credit, local, duration, 0.3, scene.last)
+          placeShot(item, local / duration)
+        }
+      }
+      window.DURATION = DURATION
+      window.ready = Promise.all([...document.images].map((image) => image.decode())).then(() => seek(0))
+    </script>
+  </body>
+</html>

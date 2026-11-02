@@ -245,6 +245,12 @@ example.org) ; `scripts/capture_readme_media.py` en tire `docs/media/` : capture
 les deux thèmes, visite animée (ffmpeg) et `hunt review` en SVG (Rich), dans l'ordre que
 la revue ouvre vraiment. Les commandes sont dans le README, « Régénérer les captures ».
 
+La vidéo de présentation suit la même règle. `scripts/capture_marketing_media.py` tire de
+la base de démonstration des images deux fois plus denses (`marketing/video/shots/`),
+`scripts/render_marketing_video.py square|vertical` les anime (`marketing/video/stage.html`,
+une image par appel à `seek(t)`, donc indépendante de la vitesse de la machine) et encode
+le MP4 avec ffmpeg. Les textes des réseaux sont dans `marketing/posts.md`.
+
 ---
 
 ## Documentation
