@@ -12,7 +12,7 @@ appel au géocodeur, limité à un par seconde). La recherche est géographique 
 exact.
 
 ```
-Exemples : Annecy, Lyon, Grenoble, Chambéry
+Exemples : Paris, Lyon, Marseille, Bordeaux
 ```
 
 ### `radius_km` — Rayon de recherche
@@ -31,7 +31,7 @@ Accepté : 1 à 150 km (au-delà, le filtre est refusé — le crawl s'étendrai
 Villes à exclure explicitement, même si elles sont dans le rayon. Utile pour éliminer des villes proches non désirées.
 
 ```
-Exemple avec Annecy ±30km : exclure Rumilly, Aix-les-Bains
+Exemple avec Paris ±10km : exclure Saint-Denis, Aubervilliers
 ```
 
 Le matching sur les villes exclues est insensible à la casse et fonctionne par nom exact.
@@ -215,12 +215,12 @@ Un filtre désactivé n'est pas utilisé en mode `watch`.
 ```yaml
 # config/filters.example.yml
 filters:
-  - name: "Annecy région - 3p meublé"
-    cities: ["Annecy"]
-    radius_km: 30
-    excluded_cities: ["Rumilly", "Aix-les-Bains"]
-    min_price: 700
-    max_price: 1300
+  - name: "Paris et proche banlieue - 3p meublé"
+    cities: ["Paris"]
+    radius_km: 10
+    excluded_cities: ["Saint-Denis", "Aubervilliers"]
+    min_price: 1200
+    max_price: 2200
     min_surface_m2: 50
     min_rooms: 2
     max_rooms: 4
@@ -249,9 +249,9 @@ Les flags mappent le formulaire web « Modifier le filtre » 1:1.
 
 ```bash
 hunt search \
-  --city Annecy --radius 20 \
-  --exclude "Rumilly,Aix-les-Bains,Annemasse" \
-  --max-price 1200 --min-surface 45 \
+  --city Paris --radius 8 \
+  --exclude "Saint-Denis,Aubervilliers,Ivry-sur-Seine" \
+  --max-price 1800 --min-surface 35 \
   --unfurnished --no-ground-floor --no-first-floor \
   --dpe A,B,C,D -n 25
 ```

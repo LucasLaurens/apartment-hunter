@@ -49,7 +49,7 @@ chaque commit (ruff, format, mypy strict, tests).
 
 ### Essayer sans rien crawler
 
-Une base de démonstration, remplie d'annonces fictives autour d'Annecy :
+Une base de démonstration, remplie d'annonces fictives à Paris et en proche banlieue :
 
 ```bash
 uv run python scripts/seed_demo.py demo.db
@@ -135,9 +135,9 @@ hunt search --limit 20             # Plus de résultats
 
 # Recherche ad-hoc (sans filtre sauvegardé) — mappe le formulaire web 1:1
 hunt search \
-  --city Annecy --radius 20 \
-  --exclude "Rumilly,Aix-les-Bains,Annemasse" \
-  --max-price 1200 --min-surface 45 \
+  --city Paris --radius 8 \
+  --exclude "Saint-Denis,Aubervilliers,Ivry-sur-Seine" \
+  --max-price 1800 --min-surface 35 \
   --unfurnished --no-ground-floor --no-first-floor \
   --dpe A,B,C,D -n 25
 

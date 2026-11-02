@@ -9,7 +9,7 @@ Deux canaux, sans config : **terminal** (mode `watch`/`search`) et **signal in-a
 `TerminalNotifier` imprime un bloc clair quand de nouvelles annonces correspondent à un filtre :
 
 ```
-🔔 3 nouvelles annonces · Annecy centre
+🔔 3 nouvelles annonces · Paris est
   • Appartement 3p 65m² · 65m² · 3p · 1 210 € CC · DPE C · GES B · paru 30/10/2026 · −12 % vs réf.
     https://www.pap.fr/annonces/...
   • Appartement 2p 48m² · 48m² · 2p · 780 € · charges non communiquées · vu 31/10/2026 · pas de repère (charges inconnues)
@@ -67,7 +67,7 @@ Les notifieurs email (`aiosmtplib`), desktop (`plyer`) et macOS (`osascript`) on
 ## Logs
 
 ```
-07:42:13 | INFO | Notified 3 new listings for filter 'Annecy meublé'
+07:42:13 | INFO | Notified 3 new listings for filter 'Paris meublé'
 ```
 
 Niveau configurable via `LOG_LEVEL=DEBUG`.

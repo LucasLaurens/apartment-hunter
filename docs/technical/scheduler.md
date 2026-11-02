@@ -155,11 +155,11 @@ Tous les filtres actifs sont vérifiés à chaque cycle. Chaque filtre a sa prop
 
 ```
 Cycle #1:
-    filtre "Annecy meublé"   → 3 nouvelles annonces → notifiées → marquées
+    filtre "Paris meublé"    → 3 nouvelles annonces → notifiées → marquées
     filtre "Lyon studio"     → 1 nouvelle annonce   → notifiée  → marquée
 
 Cycle #2:
-    filtre "Annecy meublé"   → 0 nouvelle → rien
+    filtre "Paris meublé"    → 0 nouvelle → rien
     filtre "Lyon studio"     → 2 nouvelles → notifiées → marquées
 ```
 

@@ -15,7 +15,7 @@ from ...domain.value_objects import DpeRating
 from ..tri_state import CHOICES, INDIFFERENT, parse_tri_state
 
 FILTER_ID_LENGTH = 8
-_DEFAULT_CITY = "Annecy"
+_DEFAULT_CITY = "Paris"
 
 
 def ask_filter() -> SearchFilter:

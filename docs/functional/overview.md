@@ -58,7 +58,7 @@ Lance une recherche immédiate sur toutes les sources et affiche les 10 meilleur
 
 ```bash
 hunt search
-hunt search --filter "Annecy meublé" --limit 20
+hunt search --filter "Paris meublé" --limit 20
 ```
 
 **Ce qu'il se passe :**
@@ -123,7 +123,7 @@ par la parution la plus récente. La CLI, elle, affiche toujours l'ordre par par
 
 ## Géocodage et rayon de recherche
 
-La correspondance par rayon (ex: "Annecy ±30km") utilise :
+La correspondance par rayon (ex: "Paris ±10km") utilise :
 1. **Nominatim** (OpenStreetMap, gratuit) pour convertir un nom de ville en coordonnées GPS
 2. **Haversine** (via geopy) pour calculer la distance réelle en km
 

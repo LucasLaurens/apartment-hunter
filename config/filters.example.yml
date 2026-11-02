@@ -1,13 +1,13 @@
 filters:
-  - name: "Annecy région - 3p meublé"
+  - name: "Paris et proche banlieue - 3p meublé"
     cities:
-      - "Annecy"
-    radius_km: 30
+      - "Paris"
+    radius_km: 10
     excluded_cities:
-      - "Rumilly"
-      - "Aix-les-Bains"
-    min_price: 600
-    max_price: 1200
+      - "Saint-Denis"
+      - "Aubervilliers"
+    min_price: 1200
+    max_price: 2200
     min_surface_m2: 45
     max_surface_m2: 90
     min_rooms: 2
