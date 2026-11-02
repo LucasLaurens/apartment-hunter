@@ -169,7 +169,11 @@ pas pu être lue (téléchargement impossible), c'est « pas de repère (carte d
 indisponible) » : la faute n'est pas celle de la commune.
 
 Une ancienne commune fusionnée (« Seynod », « Cran-Gevrier ») reçoit la référence de la
-commune nouvelle (Annecy) : la carte ne connaît que celle-ci. `hunt review` montre la
+commune nouvelle (Annecy) : la carte ne connaît que celle-ci. À l'inverse, Paris, Lyon et
+Marseille n'y ont pas de ligne pour la ville entière, seulement une par arrondissement :
+une annonce y est comparée à l'arrondissement que nomme son code postal (75011 → « Paris
+11e Arrondissement ») ou sa commune (« Paris 11e ») ; sans l'un ni l'autre, pas de repère
+(`build_arrondissement_name`, `domain/services/arrondissements.py`). `hunt review` montre la
 position sur chaque ligne (« −12 % », en gras hors fourchette), la phrase entière et la
 référence utilisée dans le panneau, et la mention de source en pied d'écran. La carte web
 la porte juste sous le total, et la page propose le tri « Position au marché : plus bas »

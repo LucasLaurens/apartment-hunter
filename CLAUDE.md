@@ -225,7 +225,9 @@ same commit. Full rationale: `docs/technical/conventions.md`.
   `assess` in the fixed order meublé → charges inconnues → sans surface → commune absente)
   over `domain/value_objects/market_position.py`; references come through
   `RentReferencePort`, answered by `infrastructure/rent_map.py` (Carte des loyers CSV,
-  cached per vintage) with INSEE codes from `geocoder.find_commune_codes`. Never a median of
+  cached per vintage) with INSEE codes from `geocoder.find_commune_codes`. Paris, Lyon and
+  Marseille have no city row, only arrondissements: `domain/services/arrondissements.py`
+  (`build_arrondissement_name`, from the postal code or the city label). Never a median of
   our own listings, never a wider area; every surface showing a position carries
   `RENT_MAP_CREDIT`
 - Source pills and the source pick: `GetTopListings.execute_paginated` (`source_counts`,

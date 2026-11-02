@@ -7,6 +7,7 @@ from .advertiser import (
     detect_advertiser_kind,
     find_network,
 )
+from .arrondissements import build_arrondissement_name, is_arrondissement_code
 from .commune_names import fold_commune_name
 from .criterion_suggestions import (
     SUGGESTION_THRESHOLD,
@@ -50,6 +51,8 @@ __all__ = [
     "build_criterion_suggestion",
     "read_grouping_value",
     "RentReferenceBook",
+    "build_arrondissement_name",
+    "is_arrondissement_code",
     "AGENCY_ONLY_SOURCES",
     "MAX_DESCRIPTION_CHARS",
     "MAX_TEXT_CHARS",

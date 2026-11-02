@@ -21,7 +21,7 @@ from loguru import logger
 
 from ..domain.entities import SearchFilter
 from ..domain.ports import RentReferencePort
-from ..domain.services import RentReferenceBook
+from ..domain.services import RentReferenceBook, is_arrondissement_code
 from ..domain.value_objects import RentReference, RentSegment
 from .geocoder import find_commune_codes
 
@@ -73,6 +73,7 @@ class CarteDesLoyers(RentReferencePort):
             self._failed_at = time.monotonic()
             logger.warning(f"Carte des loyers unavailable, no market position: {exc}")
             return RentReferenceBook.build_unavailable()
+        codes |= _find_arrondissement_codes(tables[RentSegment.ALL_APARTMENTS])
         return RentReferenceBook(
             {
                 name: {seg: table[code] for seg, table in tables.items() if code in table}
@@ -94,6 +95,15 @@ class CarteDesLoyers(RentReferencePort):
                         await asyncio.to_thread(_download, _SEGMENT_URLS[segment], path)
                     self._tables[segment] = await asyncio.to_thread(_read_table, path, segment)
         return self._tables
+
+
+def _find_arrondissement_codes(table: dict[str, RentReference]) -> dict[str, str]:
+    """{« Paris 11e Arrondissement »: "75111"}, the 45 rows standing for the three cities.
+
+    O(r) over the ~35 000 rows; found on every call rather than cached, it stays well
+    under the cost of the commune-code lookup that precedes it.
+    """
+    return {ref.commune: code for code, ref in table.items() if is_arrondissement_code(code)}
 
 
 def _build_file_name(segment: RentSegment) -> str:

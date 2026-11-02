@@ -18,6 +18,7 @@ from ..value_objects.market_position import (
     RentReference,
     RentSegment,
 )
+from .arrondissements import build_arrondissement_name
 from .commune_names import fold_commune_name
 
 
@@ -49,11 +50,17 @@ class RentReferenceBook:
         if not self._is_available:
             return NoMarketPosition(NoPositionReason.MAP_UNAVAILABLE)
         segment = RentSegment.from_rooms(listing.rooms)
-        reference = self._references.get(fold_commune_name(listing.location.city), {}).get(segment)
+        reference = self._find_segments(listing).get(segment)
         if reference is None:
             return NoMarketPosition(NoPositionReason.COMMUNE_ABSENT)
         per_m2 = listing.price.total / Decimal(str(listing.surface_m2))
         return MarketPosition(reference=reference, per_m2=per_m2)
+
+    def _find_segments(self, listing: Listing) -> Mapping[RentSegment, RentReference]:
+        """Paris, Lyon and Marseille are read by arrondissement: the map has no city row."""
+        location = listing.location
+        name = build_arrondissement_name(location.city, location.postal_code) or location.city
+        return self._references.get(fold_commune_name(name), {})
 
     def annotate(self, listings: list[Listing]) -> list[Listing]:
         """O(n) time — n the listings; each lookup is a dict access."""

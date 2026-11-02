@@ -224,6 +224,7 @@ src/apartment_hunter/
 │   │   └── rent_reference_port.py ← RentReferencePort (références de la Carte des loyers)
 │   └── services/
 │       ├── advertiser.py         ← detect_advertiser_kind + find_network (particulier / agence / enseigne)
+│       ├── arrondissements.py    ← build_arrondissement_name (Paris, Lyon, Marseille sur la carte des loyers)
 │       ├── commune_names.py      ← fold_commune_name (une commune, quelle que soit sa graphie)
 │       ├── criterion_suggestions.py ← build_criterion_suggestion (la modification de filtre la plus prudente)
 │       ├── dismissals.py         ← DismissedHomes (quelles annonces un écart masque)

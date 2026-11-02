@@ -21,6 +21,7 @@ _fake = Faker("fr_FR")
 def build_listing(
     *,
     city: str = "Annecy",
+    postal_code: str | None = None,
     price: float = 900.0,
     surface_m2: float | None = 55.0,
     rooms: int | None = 3,
@@ -45,6 +46,7 @@ def build_listing(
         source=source,
         location=Location(
             city=city,
+            postal_code=postal_code,
             latitude=45.9 + _fake.pyfloat(min_value=-0.1, max_value=0.1),
             longitude=6.1,
         ),
