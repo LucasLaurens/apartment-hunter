@@ -45,7 +45,9 @@ NETWORK_NAMES: Final[dict[str, str]] = {
 PRIVATE_ONLY_SOURCES: Final[frozenset[str]] = frozenset({"pap"})
 # A lone agency's own site: its mandates only, but no network behind it. Kept out of
 # NETWORK_NAMES, which `find_network` reads as brands to spot inside a branch name.
-INDEPENDENT_AGENCY_SOURCES: Final[frozenset[str]] = frozenset({"2a-immobilier", "sbm-immobilier"})
+INDEPENDENT_AGENCY_SOURCES: Final[frozenset[str]] = frozenset(
+    {"2a-immobilier", "sbm-immobilier", "agence-bfm"}
+)
 AGENCY_ONLY_SOURCES: Final[frozenset[str]] = (
     frozenset(NETWORK_NAMES) | FEDERATION_SOURCES | INDEPENDENT_AGENCY_SOURCES
 )

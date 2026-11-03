@@ -108,7 +108,7 @@ défaut, 5 au minimum) et l'alerte (15 min).
 
 Par défaut, l'outil respecte le `robots.txt` et les conditions d'utilisation de chaque
 site. Dans **Paramètres**, ou avec `hunt rules ignore`, vous pouvez les ignorer : cela
-rouvre Bien'ici, Locservice, FNAIM, 2A Immobilier, SBM Immobilier et les pages que
+rouvre Bien'ici, Locservice, FNAIM, 2A Immobilier, SBM Immobilier, Agence BFM et les pages que
 `robots.txt` ferme. Ces sites interdisent l'extraction de leurs annonces : **vous en êtes
 seul responsable**. Les protections anti-bot, elles, ne sont jamais contournées
 ([ADR-0012](docs/decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)).
@@ -117,7 +117,7 @@ seul responsable**. Les protections anti-bot, elles, ne sont jamais contournées
 
 ## Sources
 
-13 sites scrapés, tous **publics** (sans login), sous un nom honnête et sans contournement anti-bot ; Bien'ici, Locservice, FNAIM, 2A Immobilier et SBM Immobilier seulement quand les règles des sites sont ignorées ([ADR-0012](docs/decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)) :
+14 sites scrapés, tous **publics** (sans login), sous un nom honnête et sans contournement anti-bot ; Bien'ici, Locservice, FNAIM, 2A Immobilier, SBM Immobilier et Agence BFM seulement quand les règles des sites sont ignorées ([ADR-0012](docs/decisions/0012-le-chasseur-peut-ignorer-les-regles-des-sites.md)) :
 
 | Source | Méthode | DPE / GES |
 |--------|---------|-----------|
@@ -131,6 +131,7 @@ seul responsable**. Les protections anti-bot, elles, ne sont jamais contournées
 | **Square Habitat** | curl_cffi + JSON `ng-state` | DPE + GES page détail |
 | **2A Immobilier** (règles des sites ignorées seulement) | curl_cffi + SSR HTML | DPE page détail |
 | **SBM Immobilier** (règles des sites ignorées seulement) | curl_cffi + SSR HTML + JSON-LD | DPE + GES page détail |
+| **Agence BFM** (règles des sites ignorées seulement) | curl_cffi + état JSON Netty (base64) | DPE + GES page détail |
 | **Locservice** (règles des sites ignorées seulement) | curl_cffi + SSR HTML | DPE + GES page détail |
 
 
@@ -227,7 +228,7 @@ hunt rules honour                  # Les respecter de nouveau (défaut)
 
 - **Python 3.13** — async/await natif ; le minimum, car `urllib.robotparser` ne lit les jokers `*` et `$` de robots.txt qu'à partir de 3.13
 - **httpx** — HTTP async avec retry
-- **curl_cffi** — client HTTP des crawlers HTML, sans imitation de navigateur (Orpi, Foncia, ParuVendu, Century21, Laforêt, Citya, Square Habitat, Bien'ici, Locservice, FNAIM, 2A Immobilier, SBM Immobilier)
+- **curl_cffi** — client HTTP des crawlers HTML, sans imitation de navigateur (Orpi, Foncia, ParuVendu, Century21, Laforêt, Citya, Square Habitat, Bien'ici, Locservice, FNAIM, 2A Immobilier, SBM Immobilier, Agence BFM)
 - **Playwright** — Chromium headless pour l'audit de l'interface (`make ui-check`)
 - **FastAPI + uvicorn** — interface web locale
 - **BeautifulSoup4 + lxml** — parsing HTML

@@ -279,7 +279,8 @@ src/apartment_hunter/
 │   │   ├── locservice_crawler.py ← règles des sites ignorées seulement
 │   │   ├── fnaim_crawler.py      ← règles des sites ignorées seulement
 │   │   ├── twoa_immobilier_crawler.py ← règles des sites ignorées seulement
-│   │   └── sbm_immobilier_crawler.py  ← règles des sites ignorées seulement
+│   │   ├── sbm_immobilier_crawler.py  ← règles des sites ignorées seulement
+│   │   └── agence_bfm_crawler.py      ← règles des sites ignorées seulement
 │   ├── notifications/
 │   │   ├── terminal_notifier.py
 │   │   └── composite_notifier.py

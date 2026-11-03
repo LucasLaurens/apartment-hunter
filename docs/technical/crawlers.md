@@ -46,6 +46,7 @@ crawlers tournent en parallèle sans se gêner mutuellement.
 | Square Habitat | 2.5s |
 | 2A Immobilier | 2.5s, une requête à la fois (`CITY_CONCURRENCY = 1`) |
 | SBM Immobilier | 2.5s, une requête à la fois (`CITY_CONCURRENCY = 1`) |
+| Agence BFM | 5.0s (`Crawl-delay` de son robots.txt), une requête à la fois |
 
 ### Un seul nom, aucun déguisement
 
@@ -341,6 +342,29 @@ découpe le rayon.
   description (`detect_furnished`). Le chauffage collectif n'est pas repris : `ListingDetails`
   n'a pas ce champ.
 
+### Agence seule, état JSON Netty (Agence BFM) — règles des sites ignorées seulement
+
+`agence_bfm_crawler.py`, `forbids_reproduction = True` : ses mentions légales interdisent toute
+reproduction du site sans l'accord exprès de Netty ; son `robots.txt` autorise tout sauf les PDF
+et demande `Crawl-delay: 5` (`RATE_LIMIT_SECONDS = 5.0`).
+
+- Les classes CSS sont générées (`_se5lkg`) et changent à chaque build : rien n'est lu dans le
+  balisage. Chaque page porte son état en JSON encodé base64,
+  `window._TEMPLATE_DATA = JSON.parse(b64_to_utf8("…"))` (`read_state`), dont `prodId` associe
+  une référence (`LA4396`) à la fiche complète (`read_records`). Base64 puis JSON : rien n'est
+  évalué.
+- Liste `/location`, lue une fois (`covers_radius`) : tout le stock sur une page (9 fiches le
+  2026-11-03). Si `prodCount` dépasse le nombre de fiches, un avertissement dit que le site
+  pagine. Seules les fiches `prod_type == "appt"` et `type_offer == 2` (location) sont gardées.
+- Fiche : `rent` + `charges` → `Price(amount, charges)` et `charges_included` ; sans provision le
+  site écrit « HC », `rent_total` reste le loyer seul (« charges ? »). `surface`, `rooms`,
+  `floor` (0 = champ non rempli → étage inconnu, jamais RDC ; `floor == floors` → dernier
+  étage), `city` + `cp` (sinon `MissingCommuneError`), `geoloc` si `accurate`, `photos`,
+  `details.fr` → description et meublé (`detect_furnished` : le champ `mbl` vaut 1 sur toutes les
+  fiches, meublées ou non), `time_online` → date de parution (`SITE`).
+- Page détail (`read_reference` tire `LA4396` de l'URL) : la même fiche, plus `legal.fr`,
+  « Classe énergie D, Classe climat D » → DPE et GES.
+
 ### Agence seule, stock entier en une liste (2A Immobilier)
 
 Une agence locale (Annecy, Aix-les-Bains, Rumilly, Chambéry), site Drupal rendu serveur. Ses
@@ -456,6 +480,7 @@ Où chaque source publie sa date :
 | **PAP** | `p.item-date` « Publié le 3 août 2026 » sur la page détail, lue par la session de la recherche (un client sans elle reçoit 403) | +1 requête / annonce |
 | **Bien'ici** | `publicationDate` de l'API (UTC, ramenée à l'heure locale au stockage) | gratuit |
 | **SBM Immobilier** | « Ajout : 30 octobre 2026 » sur la carte de la liste | gratuit |
+| **Agence BFM** | `time_online` (horodatage Unix) dans l'état JSON de la liste | gratuit |
 | **Century21, Laforêt, Citya, Locservice, FNAIM, 2A Immobilier** | aucune date publiée (Locservice : un badge « Récent » seulement) | — |
 
 Les insertions étant `INSERT OR IGNORE`, `SqliteRepository._backfill_site_dates` met à jour les
@@ -532,11 +557,11 @@ CrawlAllSources.execute()
 Pour éviter de relancer chaque source commune par commune, le crawl dispatche deux filtres :
 
 - **Sources `covers_radius = True`** (PAP, Century21, Laforêt, Square Habitat, Bien'ici,
-  Locservice, 2A Immobilier, SBM Immobilier) : le site couvre déjà la zone (rayon natif PAP, communes voisines pour
+  Locservice, 2A Immobilier, SBM Immobilier, Agence BFM) : le site couvre déjà la zone (rayon natif PAP, communes voisines pour
   Century21 et Laforêt — dont la page ville liste aussi le stock des agences alentour —,
   département entier pour Square Habitat, carré autour de la ville pour Bien'ici, voisines jusqu'à
   ~20 km pour Locservice — un rayon de filtre plus large n'y voit pas au-delà —, stock entier de
-  l'agence pour 2A Immobilier et SBM Immobilier).
+  l'agence pour 2A Immobilier, SBM Immobilier et Agence BFM).
   Elles reçoivent le filtre **de base** → **une seule recherche** par ville cible.
 - **Sources par ville exacte** (Orpi, Foncia, ParuVendu, Citya, FNAIM) : reçoivent le filtre **étendu** aux
   communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon).
@@ -641,6 +666,7 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         FnaimCrawler(timeout=timeout),
         TwoAImmobilierCrawler(timeout=timeout),
         SbmImmobilierCrawler(timeout=timeout),
+        AgenceBfmCrawler(timeout=timeout),
         AvendreCrawler(timeout=timeout),   # ← ajouter ici
     ]
 ```

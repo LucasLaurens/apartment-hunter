@@ -1,3 +1,4 @@
+from .agence_bfm_crawler import AgenceBfmCrawler
 from .base_crawler import BaseCrawler, ListingDetails, build_listing_id
 from .bienici_crawler import BienIciCrawler
 from .century21_crawler import Century21Crawler
@@ -15,6 +16,7 @@ from .squarehabitat_crawler import SquareHabitatCrawler
 from .twoa_immobilier_crawler import TwoAImmobilierCrawler
 
 __all__ = [
+    "AgenceBfmCrawler",
     "BaseCrawler",
     "BienIciCrawler",
     "ListingDetails",
