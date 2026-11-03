@@ -281,6 +281,7 @@ const state = {
   mapHomes: [],             // homes the results map loaded, for the popup's « Écarter »
   filterArea: null,
   searchPollTimer: null,
+  searchRun: 0,             // bumped on every filter shown: an older poll stops itself
   searchStart: 0,
 };
 
@@ -417,9 +418,11 @@ async function restoreUrlState() {
 
 function enterListings({filterId, page, sort, source, showMap}) {
   clearTimeout(state.searchPollTimer);  // stop polling a previous filter's crawl
+  state.searchRun += 1;
   showListingsView();
   Object.assign(state, {filterId, page, sort, activeSource: source, showMap});
   renderSidebar();
+  followSearch();
 }
 
 function buildPageUrl() {
@@ -1464,17 +1467,38 @@ function setSearchButton(busy) {
   btn.innerHTML = busy ? `${icon(ICON.WATCH)} Recherche…` : `${icon(ICON.SEARCH)} Rechercher`;
 }
 
-async function pollSearch() {
+// The button shows the server's word on the shown filter, not what this page last did:
+// leaving a filter mid-crawl used to stop the poll and freeze the button on « Recherche… »,
+// and a reload hid a crawl still running.
+async function followSearch() {
+  const run = state.searchRun;
+  if (el(EL.SEARCH_BTN).disabled) setStatus('');  // the status spoke of a crawl no longer shown
+  setSearchButton(false);
+  state.searchSources = [];
+  try {
+    const res = await fetch(API.searchStatus(state.filterId));
+    const payload = await res.json();
+    if (run !== state.searchRun || payload.status !== SEARCH_STATUS.SEARCHING) return;
+  } catch(e) { return; }  // no answer: the button stays usable, a click starts or joins the crawl
+  setSearchButton(true);
+  setStatus('Recherche en cours…');
+  state.searchStart = Date.now();
+  pollSearch();
+}
+
+async function pollSearch(run = state.searchRun) {
   clearTimeout(state.searchPollTimer);
   let status = SEARCH_STATUS.SEARCHING, newCount = 0;
   try {
     const res = await fetch(API.searchStatus(state.filterId));
     const payload = await res.json();
+    if (run !== state.searchRun) return;
     status = payload.status; newCount = payload.new_count || 0;
     state.searchSources = payload.sources || [];
   } catch(e) { /* transient — keep polling */ }
 
   await loadListings(state.page, false, true);  // refresh from DB, no skeleton flash
+  if (run !== state.searchRun) return;
 
   const elapsed = Date.now() - state.searchStart;
   const finished = status === SEARCH_STATUS.DONE || status === SEARCH_STATUS.IDLE;
@@ -1486,7 +1510,7 @@ async function pollSearch() {
     await loadListings(state.page, true);  // final refresh, highlight new
     return;
   }
-  state.searchPollTimer = setTimeout(pollSearch, SEARCH_POLL_MS);
+  state.searchPollTimer = setTimeout(() => pollSearch(run), SEARCH_POLL_MS);
 }
 
 // ── Watch ─────────────────────────────────────────────────────────────────────
