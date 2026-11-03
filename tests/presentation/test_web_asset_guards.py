@@ -265,6 +265,11 @@ def test_the_rent_map_credit_names_the_source_as_the_domain_does() -> None:
     assert RENT_MAP_CREDIT[1:] in _APP_JS
 
 
+def test_the_site_rules_the_page_sends_are_the_domain_ones() -> None:
+    # Act & Assert — a value the server does not know would answer 422 on every toggle
+    assert set(_read_js_object("SITE_RULES").values()) == {rules.value for rules in SiteRules}
+
+
 def test_the_card_masonry_keeps_the_reading_order() -> None:
     """Cards are packed as a masonry by auto-placement, in DOM order.
 
@@ -283,8 +288,3 @@ def test_the_card_masonry_keeps_the_reading_order() -> None:
     assert ".cards.is-masonry" in styles
     assert "MASONRY: 'is-masonry'" in _APP_JS
     assert not dense, "un placement `dense` réordonnerait les cartes"
-
-
-def test_the_site_rules_the_page_sends_are_the_domain_ones() -> None:
-    # Act & Assert — a value the server does not know would answer 422 on every toggle
-    assert set(_read_js_object("SITE_RULES").values()) == {rules.value for rules in SiteRules}

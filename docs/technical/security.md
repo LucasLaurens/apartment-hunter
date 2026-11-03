@@ -90,7 +90,7 @@ crawl à des milliers de communes. Dans les deux cas : martèlement des sites et
 | `max_results` | 1 → `MAX_MAX_RESULTS` (500) |
 | prix, surfaces, pièces, âge, photos | jamais négatifs, toujours un nombre (`nan`, `inf` refusés) |
 | `max_age_days` | ≤ `MAX_AGE_DAYS` (3650) : au-delà, `maintenant − âge` sort du calendrier et chaque page du filtre répondait 500 |
-| `cities` | ≤ `MAX_CITIES` (10) : chaque ville est un appel Nominatim. Borne les villes *saisies*, pas les communes du rayon que le crawl visite (jusqu'à 30, `with_crawl_cities`) |
+| `cities` | ≤ `MAX_CITIES` (10) : chaque ville est un appel Nominatim. Borne de saisie : les communes du rayon passées aux sources par ville (`with_crawl_cities`) n'y sont pas soumises, `_MAX_COMMUNES` (30) les borne |
 
 L'API web renvoie **400** avec le message d'erreur (le `min`/`max` du formulaire n'est
 qu'un confort client). Les overrides CLI `hunt watch --interval/--refresh` contournent

@@ -44,6 +44,9 @@ crawlers tournent en parallèle sans se gêner mutuellement.
 | Laforêt | 2.0s |
 | Citya | 2.0s |
 | Square Habitat | 2.5s |
+| Bien'ici | 3.0s, en série (`CITY_CONCURRENCY = 1`) |
+| Locservice | 2.0s |
+| FNAIM | 2.0s |
 | 2A Immobilier | 2.5s, une requête à la fois (`CITY_CONCURRENCY = 1`) |
 | SBM Immobilier | 2.5s, une requête à la fois (`CITY_CONCURRENCY = 1`) |
 | Agence BFM | 5.0s (`Crawl-delay` de son robots.txt), une requête à la fois |
@@ -546,6 +549,8 @@ CrawlAllSources.execute()
     ├── CityaCrawler.fetch()      ──→ curl_cffi
     ├── BienIciCrawler.fetch()    ──→ curl_cffi (règles des sites ignorées seulement)
     ├── SquareHabitatCrawler.fetch() ──→ curl_cffi
+    ├── LocserviceCrawler.fetch() ──→ curl_cffi (règles des sites ignorées seulement)
+    ├── FnaimCrawler.fetch()      ──→ curl_cffi (règles des sites ignorées seulement)
     ├── TwoAImmobilierCrawler.fetch() ──→ curl_cffi (règles des sites ignorées seulement)
     └── await all → save_many()
 ```
@@ -564,7 +569,31 @@ Pour éviter de relancer chaque source commune par commune, le crawl dispatche d
   l'agence pour 2A Immobilier, SBM Immobilier et Agence BFM).
   Elles reçoivent le filtre **de base** → **une seule recherche** par ville cible.
 - **Sources par ville exacte** (Orpi, Foncia, ParuVendu, Citya, FNAIM) : reçoivent le filtre **étendu** aux
-  communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon).
+  communes du rayon et itèrent dessus (elles n'ont pas de paramètre rayon). Ce filtre étendu
+  vient de `SearchFilter.with_crawl_cities` : jusqu'à 30 communes (`_MAX_COMMUNES`), au-delà de
+  `MAX_CITIES` (10), qui ne borne que les villes saisies. `dataclasses.replace` re-validerait et
+  refuserait la liste (tout filtre de plus de 10 communes dans le rayon plantait au crawl).
+
+#### ParuVendu : une commune vide coûte une redirection, pas une page département
+
+ParuVendu reste **par ville exacte**. Mesuré le 2026-11-01 autour d'Annecy (20 km, 30 communes) :
+
+- `/immobilier/recherche/location/appartement/{commune}-{cp}/` répond **200** avec les seules
+  annonces de la commune quand elle en a (10 communes) ; l'ancien chemin
+  `/immobilier/location/appartement/…` ne fait que rediriger (301) vers celui-ci, il est donc
+  demandé directement ;
+- une commune **sans annonce** (20 communes) répond **301 vers la page du département**. Suivre
+  la redirection téléchargeait cette même page (~560 Ko) une fois par commune vide, et envoyait
+  ses cartes hors rayon à l'enrichissement détail. `ParuVenduCrawler.FOLLOW_REDIRECTS = False` :
+  `BaseCrawler._fetch_page` lit alors une redirection comme « pas de page » (journal debug) ;
+- la page département ne remplace pas les communes : elle s'arrête à **5 pages** (`?p=6` → 404),
+  150 annonces sur 206, et en ratait 11 sur les 40 du rayon (les plus anciennes). Pas de rayon
+  natif utilisable : le formulaire poste sur `/immobilier/annoncefo/`, interdit par `robots.txt`.
+
+Avant / après sur ce filtre : ~80 requêtes HTTP (301 compris) et ~14 Mo → 30 requêtes et 2,8 Mo ;
+64 visites détail → 40 ; les 40 annonces du rayon restent. Une page par commune
+(`MAX_PAGES = 1`, 30 cartes ; Annecy en avait 29) : un `?p=2` inexistant répond un 404 de taille
+pleine. Couvert par `tests/infrastructure/test_paruvendu_empty_commune.py`.
 
 Le `ListingMatcher` filtre ensuite tout au rayon exact, donc la couverture reste identique.
 
@@ -681,3 +710,16 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
 Le `InMemoryCrawler` existant est réutilisable pour toutes les sources.
 
 ---
+
+## Anti-bot : cas extrêmes
+
+Si un site bloque malgré la rotation UA et le rate limiting :
+
+1. **Playwright** — exécuter un vrai navigateur headless. Template disponible dans `base_crawler.py` (commenté). Coût : +200ms par requête, nécessite `playwright install`.
+
+2. **Proxy rotatif** — passer les requêtes httpx via un proxy (Bright Data, Oxylabs). Modifier `_get_client()` :
+   ```python
+   httpx.AsyncClient(proxies={"all://": "http://user:pass@proxy.host:port"})
+   ```
+
+3. **Scraping-as-a-service** — APIs comme ScraperAPI ou Zyte qui gèrent anti-bot automatiquement. Remplacer `_get_throttled` par leurs endpoints.

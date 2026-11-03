@@ -1,5 +1,6 @@
 from .advertiser import (
     AGENCY_ONLY_SOURCES,
+    FEDERATION_SOURCES,
     INDEPENDENT_AGENCY_SOURCES,
     MIXED_SOURCES,
     NETWORK_NAMES,
@@ -55,6 +56,7 @@ __all__ = [
     "build_arrondissement_name",
     "is_arrondissement_code",
     "AGENCY_ONLY_SOURCES",
+    "FEDERATION_SOURCES",
     "INDEPENDENT_AGENCY_SOURCES",
     "MAX_DESCRIPTION_CHARS",
     "MAX_TEXT_CHARS",

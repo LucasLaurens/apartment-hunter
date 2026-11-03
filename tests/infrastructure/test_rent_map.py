@@ -121,3 +121,38 @@ async def test_deleting_the_downloads_empties_the_cache(tmp_path: Path) -> None:
 
     # Assert
     assert not (tmp_path / str(RENT_MAP_VINTAGE)).exists()
+
+
+async def test_a_paris_home_is_assessed_against_its_arrondissement(tmp_path: Path) -> None:
+    # Arrange — the map carries « Paris 11e Arrondissement », never Paris as a whole
+    _fill_cache(tmp_path)
+    rent_map = CarteDesLoyers(tmp_path, find_codes=_find_codes)
+    listing = build_listing(
+        city="Paris",
+        postal_code="75011",
+        price=1500.0,
+        surface_m2=45.0,
+        rooms=2,
+        charges_included=True,
+    )
+
+    # Act
+    position = (await rent_map.find_references([build_search_filter()])).assess(listing)
+
+    # Assert
+    assert isinstance(position, MarketPosition)
+    assert position.reference.commune == "Paris 11e Arrondissement"
+    assert position.reference.per_m2 == Decimal("33.28")
+
+
+async def test_a_paris_home_with_no_arrondissement_has_no_position(tmp_path: Path) -> None:
+    # Arrange
+    _fill_cache(tmp_path)
+    rent_map = CarteDesLoyers(tmp_path, find_codes=_find_codes)
+    listing = build_listing(city="Paris", surface_m2=45.0, rooms=2, charges_included=True)
+
+    # Act
+    position = (await rent_map.find_references([build_search_filter()])).assess(listing)
+
+    # Assert
+    assert position == NoMarketPosition(NoPositionReason.COMMUNE_ABSENT)

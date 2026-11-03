@@ -49,7 +49,7 @@ chaque commit (ruff, format, mypy strict, tests).
 
 ### Essayer sans rien crawler
 
-Une base de démonstration, remplie d'annonces fictives autour d'Annecy :
+Une base de démonstration, remplie d'annonces fictives à Paris et en proche banlieue :
 
 ```bash
 uv run python scripts/seed_demo.py demo.db
@@ -129,6 +129,8 @@ seul responsable**. Les protections anti-bot, elles, ne sont jamais contournées
 | **Laforêt** | curl_cffi + SSR HTML | — |
 | **Citya** | curl_cffi + SSR HTML | DPE + GES page détail |
 | **Square Habitat** | curl_cffi + JSON `ng-state` | DPE + GES page détail |
+| **Bien'ici** (règles des sites ignorées seulement) | curl_cffi + API JSON publique | DPE + GES liste |
+| **FNAIM** (règles des sites ignorées seulement) | curl_cffi + SSR HTML | DPE + GES page détail |
 | **2A Immobilier** (règles des sites ignorées seulement) | curl_cffi + SSR HTML | DPE page détail |
 | **SBM Immobilier** (règles des sites ignorées seulement) | curl_cffi + SSR HTML + JSON-LD | DPE + GES page détail |
 | **Agence BFM** (règles des sites ignorées seulement) | curl_cffi + état JSON Netty (base64) | DPE + GES page détail |
@@ -287,3 +289,12 @@ lointaine.
 ### Sous le capot
 - Un seul client HTTP (`httpx`) au lieu de deux, une horloge injectée partout, un plafond
   sur la taille des réponses, une CI durcie (actions épinglées, `uv sync --locked`).
+
+---
+
+## Licence
+
+[MIT](LICENSE). Les skills de `.claude/skills/` reprises de
+[mattpocock/skills](https://github.com/mattpocock/skills) restent sous sa licence MIT
+([notice](.claude/skills/THIRD_PARTY_LICENSE)). Le code est libre ; les annonces collectées restent la propriété de leurs
+éditeurs, et chaque utilisateur répond de l'usage qu'il fait de l'outil.

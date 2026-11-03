@@ -80,6 +80,7 @@ Implémente les ports définis dans le domaine :
 
 | Port | Implémentation |
 |------|---------------|
+| `CrawlerPort` | `PapCrawler`, `OrpiCrawler`, `FonciaCrawler`, `ParuVenduCrawler`, `Century21Crawler`, `LaforetCrawler`, `CityaCrawler`, `SquareHabitatCrawler`, `FnaimCrawler` |
 | `CrawlerPort` | `PapCrawler`, `OrpiCrawler`, `FonciaCrawler`, `ParuVenduCrawler`, `Century21Crawler`, `LaforetCrawler`, `CityaCrawler`, `SquareHabitatCrawler`, `TwoAImmobilierCrawler` |
 | `ListingRepositoryPort` | `SqliteRepository` |
 | `NotifierPort` | `TerminalNotifier`, `CompositeNotifier` |

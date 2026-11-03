@@ -8,8 +8,6 @@ seulement quand les règles des sites sont ignorées. Données disponibles et li
 > qui refuse un client honnête (anti-bot, captcha), ou qui ne filtre pas par ville, est **retirée**
 > plutôt que contournée ou laissée en échec. Aucun contournement : ni imitation de navigateur
 > (empreinte TLS, en-têtes), ni rotation de User-Agent, ni solveur de captcha, ni compte.
-> Le `robots.txt` est appliqué, et un site dont les conditions d'utilisation interdisent
-> l'extraction de ses annonces n'est pas crawlé.
 
 ---
 
@@ -47,6 +45,7 @@ PAP/Century21/Laforêt/Square Habitat/Bien'ici/Locservice/2A Immobilier/SBM Immo
 ### Date de parution
 
 Chaque ligne affiche la date que la source annonce. Quand la source n'en publie aucune (Century21,
+Laforêt, Citya, Locservice), la date affichée est celle du **premier crawl** où l'annonce est apparue, préfixée
 Laforêt, Citya, 2A Immobilier), la date affichée est celle du **premier crawl** où l'annonce est apparue, préfixée
 « vu » (italique atténué en CLI, infobulle explicite sur le web) — c'est une borne haute : l'annonce
 n'est jamais plus récente que ça. Détail technique et provenance par source :
@@ -71,6 +70,7 @@ Le DPE (énergie) et le GES (émissions) sont affichés par annonce, sur deux é
 
 - **Foncia** : les deux figures sont sur la carte de résultat (consommation kWh + émissions kgCO₂) → calculées sans requête supplémentaire.
 - **ParuVendu** : lettre DPE sur la carte, GES déduit des kg CO₂ de la carte (la page détail est derrière un captcha depuis le 2026-10-28).
+- **Orpi, Century21, Citya, Locservice** : absentes des cartes → lues sur la **page détail** de chaque annonce (1 requête de plus par annonce, résultat mis en cache 24h, même requête que la date de parution).
 - **Orpi, Century21, Citya, FNAIM** : absentes des cartes → lues sur la **page détail** de chaque annonce (1 requête de plus par annonce, résultat mis en cache 24h, même requête que la date de parution).
 - **PAP** : DPE sur la liste, GES généralement absent.
 - **2A Immobilier** : DPE sur la page détail. Le GES n'est jamais lu : l'agence ne le renseigne pas et le site affiche alors « A » par défaut.
@@ -91,6 +91,8 @@ Presque aucune source ne met l'étage sur ses cartes de résultat. Il est lu sur
 | **Orpi** | label de la liste de caractéristiques |
 | **ParuVendu** | page détail (label + prose), souvent bloquée par un captcha → étage inconnu |
 | **Laforêt** | page détail, uniquement dans la description |
+| **Locservice** | page détail, dans la description du propriétaire (un tiers des annonces le disent) |
+| **FNAIM** | description (carte tronquée, puis page détail) |
 | **2A Immobilier** | page détail, ligne « Etage » (« N.C. » → inconnu) |
 | **SBM Immobilier** | page détail, fiche JSON-LD (« Etage ») |
 | **Agence BFM** | liste, champ `floor` de l'état JSON (0 = non renseigné → inconnu) |

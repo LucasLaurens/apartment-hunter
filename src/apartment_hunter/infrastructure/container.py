@@ -55,6 +55,9 @@ def build_crawlers(settings: Settings) -> list[CrawlerPort]:
         LaforetCrawler(timeout=timeout),
         CityaCrawler(timeout=timeout),
         SquareHabitatCrawler(timeout=timeout),
+        BienIciCrawler(timeout=timeout),
+        LocserviceCrawler(timeout=timeout),
+        FnaimCrawler(timeout=timeout),
         TwoAImmobilierCrawler(timeout=timeout),
         SbmImmobilierCrawler(timeout=timeout),
         AgenceBfmCrawler(timeout=timeout),
@@ -146,9 +149,6 @@ class Container:
 
     def make_open_home_use_case(self) -> OpenHome:
         return OpenHome(repository=self.repository)
-
-    def make_clean_use_case(self) -> CleanListings:
-        return CleanListings(repository=self.repository, geocoding=self.geocoding)
 
     def make_site_rules_use_case(self) -> ManageSiteRules:
         return ManageSiteRules(repository=self.repository)

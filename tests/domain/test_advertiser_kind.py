@@ -2,6 +2,7 @@ from faker import Faker
 
 from apartment_hunter.domain.services import (
     AGENCY_ONLY_SOURCES,
+    FEDERATION_SOURCES,
     INDEPENDENT_AGENCY_SOURCES,
     NETWORK_NAMES,
     PRIVATE_ONLY_SOURCES,
@@ -71,5 +72,9 @@ def test_an_unknown_branch_has_no_network() -> None:
 
 
 def test_every_agency_source_names_its_network() -> None:
-    # Act & Assert — the two lists share one home; neither can gain a member alone
-    assert set(NETWORK_NAMES) | INDEPENDENT_AGENCY_SOURCES == set(AGENCY_ONLY_SOURCES)
+    # Act & Assert — the two lists share one home; neither can gain a member alone.
+    # A federation (FNAIM) and a lone agency (2A Immobilier) are agency-only with no
+    # brand of their own: the two declared exceptions.
+    exceptions = FEDERATION_SOURCES | INDEPENDENT_AGENCY_SOURCES
+    assert set(NETWORK_NAMES) == AGENCY_ONLY_SOURCES - exceptions
+    assert not set(NETWORK_NAMES) & exceptions
