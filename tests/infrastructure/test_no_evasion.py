@@ -1,4 +1,4 @@
-"""Crawlers ask honestly and take no for an answer (collection rules, CLAUDE.md).
+"""Crawlers ask honestly and take no for an answer (collection rules, .claude/rules/crawlers.md).
 
 No TLS-fingerprint imitation, no spoofed browser hints, no user-agent rotation, no
 stealth: a source that only answers a disguised client is removed. The guard reads the
